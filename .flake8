@@ -9,6 +9,10 @@ max-arguments=8
 max-line-complexity=20
 
 ignore =
+  ; Found statement that has no effect
+  WPS428,
+  ; Found overly complex annotation
+  WPS234,
   ; Found multi-line function type annotation
   WPS320,
   ; Found too deep nesting

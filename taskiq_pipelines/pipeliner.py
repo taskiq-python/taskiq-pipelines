@@ -1,5 +1,5 @@
 import json
-from typing import Any, Generic, List, Optional, TypeVar, Union
+from typing import Any, Coroutine, Generic, List, Optional, TypeVar, Union, overload
 
 import pydantic
 from taskiq import AsyncBroker, AsyncTaskiqTask
@@ -36,7 +36,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     but it's nice to have.
     """
 
-    def __init__(  # noqa: WPS234
+    def __init__(
         self,
         broker: AsyncBroker,
         task: Optional[
@@ -51,6 +51,19 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         if task:
             self.call_next(task)
 
+    @overload
+    def call_next(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        task: Union[
+            AsyncKicker[Any, Coroutine[Any, Any, _T2]],
+            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
+        ],
+        param_name: Optional[str] = None,
+        **additional_kwargs: Any,
+    ) -> "Pipeline[_FuncParams, _T2]":
+        ...
+
+    @overload
     def call_next(
         self: "Pipeline[_FuncParams, _ReturnType]",
         task: Union[
@@ -60,6 +73,17 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         param_name: Optional[str] = None,
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]":
+        ...
+
+    def call_next(
+        self,
+        task: Union[
+            AsyncKicker[Any, Any],
+            AsyncTaskiqDecoratedTask[Any, Any],
+        ],
+        param_name: Optional[str] = None,
+        **additional_kwargs: Any,
+    ) -> Any:
         """
         Adds sequential step.
 
@@ -85,8 +109,23 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                 task_id="",
             ),
         )
-        return self  # type: ignore
+        return self
 
+    @overload
+    def map(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        task: Union[
+            AsyncKicker[Any, Coroutine[Any, Any, _T2]],
+            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
+        ],
+        param_name: Optional[str] = None,
+        skip_errors: bool = False,
+        check_interval: float = 0.5,
+        **additional_kwargs: Any,
+    ) -> "Pipeline[_FuncParams, List[_T2]]":
+        ...
+
+    @overload
     def map(
         self: "Pipeline[_FuncParams, _ReturnType]",
         task: Union[
@@ -98,6 +137,19 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         check_interval: float = 0.5,
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, List[_T2]]":
+        ...
+
+    def map(
+        self,
+        task: Union[
+            AsyncKicker[Any, Any],
+            AsyncTaskiqDecoratedTask[Any, Any],
+        ],
+        param_name: Optional[str] = None,
+        skip_errors: bool = False,
+        check_interval: float = 0.5,
+        **additional_kwargs: Any,
+    ) -> Any:
         """
         Create new map task.
 
@@ -128,7 +180,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                 task_id="",
             ),
         )
-        return self  # type: ignore
+        return self
 
     def dumps(self) -> str:
         """
