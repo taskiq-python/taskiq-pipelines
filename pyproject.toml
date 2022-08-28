@@ -5,7 +5,7 @@ description = ""
 authors = ["Pavel Kirilin <win10@list.ru>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 taskiq = "^0"
 typing-extensions = "^4.3.0"
 pydantic = "^1.6.2"
