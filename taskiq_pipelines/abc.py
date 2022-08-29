@@ -43,6 +43,7 @@ class AbstractStep(ABC):
         self,
         broker: AsyncBroker,
         step_number: int,
+        parent_task_id: str,
         task_id: str,
         pipe_data: str,
         result: "TaskiqResult[Any]",
@@ -57,6 +58,7 @@ class AbstractStep(ABC):
 
         :param broker: current broker.
         :param step_number: current step number.
+        :param parent_task_id: current task id.
         :param task_id: task_id to use.
         :param pipe_data: serialized pipeline must be in labels.
         :param result: result of a previous task.

@@ -8,7 +8,7 @@ from taskiq.kicker import AsyncKicker
 from typing_extensions import ParamSpec
 
 from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
-from taskiq_pipelines.steps import MapperStep, SequentialStep, parse_step
+from taskiq_pipelines.steps import FilterStep, MapperStep, SequentialStep, parse_step
 
 _ReturnType = TypeVar("_ReturnType")
 _FuncParams = ParamSpec("_FuncParams")
@@ -171,6 +171,78 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             DumpedStep(
                 step_type=MapperStep.step_name,
                 step_data=MapperStep.from_task(
+                    task=task,
+                    param_name=param_name,
+                    skip_errors=skip_errors,
+                    check_interval=check_interval,
+                    **additional_kwargs,
+                ).dumps(),
+                task_id="",
+            ),
+        )
+        return self
+
+    @overload
+    def filter(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        task: Union[
+            AsyncKicker[Any, Coroutine[Any, Any, bool]],
+            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, bool]],
+        ],
+        param_name: Optional[str] = None,
+        skip_errors: bool = False,
+        check_interval: float = 0.5,
+        **additional_kwargs: Any,
+    ) -> "Pipeline[_FuncParams, _ReturnType]":
+        ...
+
+    @overload
+    def filter(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        task: Union[
+            AsyncKicker[Any, bool],
+            AsyncTaskiqDecoratedTask[Any, bool],
+        ],
+        param_name: Optional[str] = None,
+        skip_errors: bool = False,
+        check_interval: float = 0.5,
+        **additional_kwargs: Any,
+    ) -> "Pipeline[_FuncParams, _ReturnType]":
+        ...
+
+    def filter(
+        self,
+        task: Union[
+            AsyncKicker[Any, Any],
+            AsyncTaskiqDecoratedTask[Any, Any],
+        ],
+        param_name: Optional[str] = None,
+        skip_errors: bool = False,
+        check_interval: float = 0.5,
+        **additional_kwargs: Any,
+    ) -> Any:
+        """
+        Add filter step.
+
+        This step is executed on a list of items,
+        like map.
+
+        It runs many small subtasks for each item
+        in sequence and if task returns true,
+        the result is added to the final list.
+
+        :param task: task to execute on every item.
+        :param param_name: parameter name to pass item into, defaults to None
+        :param skip_errors: skip errors if any, defaults to False
+        :param check_interval: how often the result of all subtasks is checked,
+             defaults to 0.5
+        :param additional_kwargs: additional function's kwargs.
+        :return: pipeline with filtering step.
+        """
+        self.steps.append(
+            DumpedStep(
+                step_type=FilterStep.step_name,
+                step_data=FilterStep.from_task(
                     task=task,
                     param_name=param_name,
                     skip_errors=skip_errors,

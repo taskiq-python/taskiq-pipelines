@@ -63,6 +63,7 @@ class PipelineMiddleware(TaskiqMiddleware):
             await next_step.act(
                 broker=self.broker,
                 step_number=current_step_num + 1,
+                parent_task_id=message.task_id,
                 task_id=next_step_data.task_id,
                 pipe_data=pipeline_data,
                 result=result,

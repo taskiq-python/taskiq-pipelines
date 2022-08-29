@@ -44,6 +44,7 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
         self,
         broker: AsyncBroker,
         step_number: int,
+        parent_task_id: str,
         task_id: str,
         pipe_data: str,
         result: "TaskiqResult[Any]",
@@ -61,6 +62,7 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
 
         :param broker: current broker.
         :param step_number: current step number.
+        :param parent_task_id: current step's task id.
         :param task_id: new task id.
         :param pipe_data: serialized pipeline.
         :param result: result of the previous task.

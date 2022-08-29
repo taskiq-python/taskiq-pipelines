@@ -2,14 +2,10 @@ import asyncio
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pydantic
-from taskiq import (
-    AsyncBroker,
-    AsyncTaskiqDecoratedTask,
-    TaskiqError,
-    TaskiqResult,
-    async_shared_broker,
-)
+from taskiq import AsyncBroker, TaskiqError, TaskiqResult
+from taskiq.brokers.shared_broker import async_shared_broker
 from taskiq.context import Context, default_context
+from taskiq.decor import AsyncTaskiqDecoratedTask
 from taskiq.kicker import AsyncKicker
 
 from taskiq_pipelines.abc import AbstractStep
@@ -17,29 +13,33 @@ from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
 from taskiq_pipelines.exceptions import AbortPipeline
 
 
-@async_shared_broker.task(task_name="taskiq_pipelines.shared.wait_tasks")
-async def wait_tasks(  # noqa: C901, WPS231
+@async_shared_broker.task(task_name="taskiq_pipelines.shared.filter_tasks")
+async def filter_tasks(  # noqa: C901, WPS210, WPS231
     task_ids: List[str],
+    parent_task_id: str,
     check_interval: float,
     context: Context = default_context,
-    skip_errors: bool = True,
+    skip_errors: bool = False,
 ) -> List[Any]:
     """
-    Waits for subtasks to complete.
+    Filter resulted tasks.
 
-    This function is used by mapper
-    step.
+    It takes list of task ids,
+    and parent task id.
 
-    It awaits for all tasks from task_ids
-    to complete and then collects results
-    in single list.
+    After all subtasks are completed it gets
+    result of a parent task, and
+    if subtask's result of execution can be
+    converted to True, the item from the original
+    tasks is added to the resulting array.
 
-    :param task_ids: list of task ids.
-    :param check_interval: how often task completions are checked.
-    :param context: current execution context, defaults to default_context
-    :param skip_errors: doesn't fail pipeline if error is found.
-    :raises TaskiqError: if error is found and skip_erros is false.
-    :return: list of results.
+    :param task_ids: ordered list of task ids.
+    :param parent_task_id: task id of a parent task.
+    :param check_interval: how often checks are performed.
+    :param context: context of the execution, defaults to default_context
+    :param skip_errors: skip errors of subtasks, defaults to False
+    :raises TaskiqError: if any subtask has returned error.
+    :return: fitlered results.
     """
     ordered_ids = task_ids[:]
     tasks_set = set(task_ids)
@@ -52,19 +52,24 @@ async def wait_tasks(  # noqa: C901, WPS231
                     continue
         await asyncio.sleep(check_interval)
 
-    results = []
-    for task_id in ordered_ids:  # noqa: WPS440
+    results = await context.broker.result_backend.get_result(parent_task_id)
+    filtered_results = []
+    for task_id, value in zip(  # type: ignore  # noqa: WPS352, WPS440
+        ordered_ids,
+        results.return_value,
+    ):
         result = await context.broker.result_backend.get_result(task_id)
         if result.is_err:
             if skip_errors:
                 continue
-            raise TaskiqError(f"Task {task_id} returned error. Mapping failed.")
-        results.append(result.return_value)
-    return results
+            raise TaskiqError(f"Task {task_id} returned error. Filtering failed.")
+        if result.return_value:
+            filtered_results.append(value)
+    return filtered_results
 
 
-class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
-    """Step that maps iterables."""
+class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
+    """Task to filter results."""
 
     task_name: str
     labels: Dict[str, str]
@@ -82,14 +87,14 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         return self.json()
 
     @classmethod
-    def loads(cls, data: str) -> "MapperStep":
+    def loads(cls, data: str) -> "FilterStep":
         """
         Parses mapper step from string.
 
         :param data: dumped data.
         :return: parsed step.
         """
-        return pydantic.parse_raw_as(MapperStep, data)
+        return pydantic.parse_raw_as(FilterStep, data)
 
     async def act(
         self,
@@ -101,30 +106,24 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         result: "TaskiqResult[Any]",
     ) -> None:
         """
-        Runs mapping.
+        Run filter action.
 
-        This step creates many small
-        tasks and one waiter task.
-
-        The waiter task awaits
-        for all small tasks to complete,
-        and then assembles the final result.
+        This function creates many small filter steps,
+        and then collects all results in one big filtered array,
+        using 'filter_tasks' shared task.
 
         :param broker: current broker.
         :param step_number: current step number.
-        :param task_id: waiter task_id.
         :param parent_task_id: task_id of the previous step.
+        :param task_id: task_id to use in this step.
         :param pipe_data: serialized pipeline.
         :param result: result of the previous task.
-        :raises AbortPipeline: if the result of the
-            previous task is not iterable.
+        :raises AbortPipeline: if result is not iterable.
         """
-        sub_task_ids: List[str] = []
-        return_value = result.return_value
-        if not isinstance(return_value, Iterable):
+        if not isinstance(result.return_value, Iterable):
             raise AbortPipeline("Result of the previous task is not iterable.")
-
-        for item in return_value:
+        sub_task_ids = []
+        for item in result.return_value:
             kicker: "AsyncKicker[Any, Any]" = AsyncKicker(
                 task_name=self.task_name,
                 broker=broker,
@@ -137,12 +136,13 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
                 task = await kicker.kiq(item, **self.additional_kwargs)
             sub_task_ids.append(task.task_id)
 
-        await wait_tasks.kicker().with_task_id(task_id).with_broker(
+        await filter_tasks.kicker().with_task_id(task_id).with_broker(
             broker,
         ).with_labels(
             **{CURRENT_STEP: step_number, PIPELINE_DATA: pipe_data},  # type: ignore
         ).kiq(
             sub_task_ids,
+            parent_task_id,
             check_interval=self.check_interval,
             skip_errors=self.skip_errors,
         )
@@ -158,9 +158,9 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         skip_errors: bool,
         check_interval: float,
         **additional_kwargs: Any,
-    ) -> "MapperStep":
+    ) -> "FilterStep":
         """
-        Create new mapper step from task.
+        Create new filter step from task.
 
         :param task: task to execute.
         :param param_name: parameter name.
@@ -175,7 +175,7 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         else:
             kicker = task
         message = kicker._prepare_message()  # noqa: WPS437
-        return MapperStep(
+        return FilterStep(
             task_name=message.task_name,
             labels=message.labels,
             param_name=param_name,
