@@ -50,7 +50,8 @@ async def filter_tasks(  # noqa: C901, WPS210, WPS231
                     tasks_set.remove(task_id)
                 except LookupError:
                     continue
-        await asyncio.sleep(check_interval)
+        if tasks_set:
+            await asyncio.sleep(check_interval)
 
     results = await context.broker.result_backend.get_result(parent_task_id)
     filtered_results = []
@@ -135,7 +136,6 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
             else:
                 task = await kicker.kiq(item, **self.additional_kwargs)
             sub_task_ids.append(task.task_id)
-
         await filter_tasks.kicker().with_task_id(task_id).with_broker(
             broker,
         ).with_labels(

@@ -50,7 +50,8 @@ async def wait_tasks(  # noqa: C901, WPS231
                     tasks_set.remove(task_id)
                 except LookupError:
                     continue
-        await asyncio.sleep(check_interval)
+        if tasks_set:
+            await asyncio.sleep(check_interval)
 
     results = []
     for task_id in ordered_ids:  # noqa: WPS440

@@ -797,7 +797,7 @@ pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 
 [[package]]
 name = "taskiq"
-version = "0.0.7"
+version = "0.0.8"
 description = "Distributed task queue with full async support"
 category = "main"
 optional = false
@@ -939,7 +939,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "ee0bd057d61867418962ed5486612ececc9a53b9da00e8ae187eecc9d74699bb"
+content-hash = "8effeb2b7a74f3a10b517010dbbd1933095dac2f5ef676469c5bdf7173db6718"
 
 [metadata.files]
 anyio = [
@@ -1393,8 +1393,8 @@ stevedore = [
     {file = "stevedore-3.5.0.tar.gz", hash = "sha256:f40253887d8712eaa2bb0ea3830374416736dc8ec0e22f5a65092c1174c44335"},
 ]
 taskiq = [
-    {file = "taskiq-0.0.7-py3-none-any.whl", hash = "sha256:5d6df8431bd4b6ee8954c8ea2fb2f919835a2600a7ec3122e707730c78f96b34"},
-    {file = "taskiq-0.0.7.tar.gz", hash = "sha256:b8c9072a09c8c60f3758b68dfae5da686babde61d3935c5a956a2a3eddc1da46"},
+    {file = "taskiq-0.0.8-py3-none-any.whl", hash = "sha256:08b451c896b83a98d5e6a021c75a708cfdf560c5ccbf23a91f19d31bb4658305"},
+    {file = "taskiq-0.0.8.tar.gz", hash = "sha256:92f2ec65385115ca768c09fc65bcef8f48c90e4fb293339da5824e110abe2568"},
 ]
 tokenize-rt = [
     {file = "tokenize_rt-4.2.1-py2.py3-none-any.whl", hash = "sha256:08a27fa032a81cf45e8858d0ac706004fcd523e8463415ddf1442be38e204ea8"},
