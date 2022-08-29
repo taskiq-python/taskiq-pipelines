@@ -6,7 +6,7 @@ authors = ["Pavel Kirilin <win10@list.ru>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-taskiq = "^0"
+taskiq = ">=0.0.8, <1"
 typing-extensions = "^4.3.0"
 pydantic = "^1.6.2"
 
@@ -22,7 +22,7 @@ isort = "^5.10.1"
 yesqa = "^1.4.0"
 wemake-python-styleguide = "^0.16.1"
 mypy = "^0.971"
-pytest-xdist = {version = "^2.5.0", extras = ["psutil"]}
+pytest-xdist = { version = "^2.5.0", extras = ["psutil"] }
 
 [tool.mypy]
 strict = true
