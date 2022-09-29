@@ -2,9 +2,8 @@ import asyncio
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pydantic
-from taskiq import AsyncBroker, TaskiqError, TaskiqResult
+from taskiq import AsyncBroker, Context, TaskiqDepends, TaskiqError, TaskiqResult
 from taskiq.brokers.shared_broker import async_shared_broker
-from taskiq.context import Context, default_context
 from taskiq.decor import AsyncTaskiqDecoratedTask
 from taskiq.kicker import AsyncKicker
 
@@ -18,8 +17,8 @@ async def filter_tasks(  # noqa: C901, WPS210, WPS231
     task_ids: List[str],
     parent_task_id: str,
     check_interval: float,
-    context: Context = default_context,
     skip_errors: bool = False,
+    context: Context = TaskiqDepends(),
 ) -> List[Any]:
     """
     Filter resulted tasks.
