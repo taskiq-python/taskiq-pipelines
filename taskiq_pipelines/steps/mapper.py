@@ -5,11 +5,12 @@ import pydantic
 from taskiq import (
     AsyncBroker,
     AsyncTaskiqDecoratedTask,
+    Context,
+    TaskiqDepends,
     TaskiqError,
     TaskiqResult,
     async_shared_broker,
 )
-from taskiq.context import Context, default_context
 from taskiq.kicker import AsyncKicker
 
 from taskiq_pipelines.abc import AbstractStep
@@ -21,8 +22,8 @@ from taskiq_pipelines.exceptions import AbortPipeline
 async def wait_tasks(  # noqa: C901, WPS231
     task_ids: List[str],
     check_interval: float,
-    context: Context = default_context,
     skip_errors: bool = True,
+    context: Context = TaskiqDepends(),
 ) -> List[Any]:
     """
     Waits for subtasks to complete.
