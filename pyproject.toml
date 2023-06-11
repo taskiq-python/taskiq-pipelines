@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taskiq-pipelines"
-version = "0.0.3"
+version = "0.1.0"
 description = "Taskiq pipelines for task chaining."
 authors = ["Pavel Kirilin <win10@list.ru>"]
 readme = "README.md"
