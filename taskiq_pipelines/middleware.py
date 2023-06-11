@@ -82,7 +82,7 @@ class PipelineMiddleware(TaskiqMiddleware):
         self,
         message: "TaskiqMessage",
         result: "TaskiqResult[Any]",
-        exception: Exception,
+        exception: BaseException,
     ) -> None:
         """
         Handles on_error event.
@@ -119,7 +119,8 @@ class PipelineMiddleware(TaskiqMiddleware):
             last_task_id,
             TaskiqResult(
                 is_err=True,
-                return_value=None,
+                return_value=None,  # type: ignore
+                error=AbortPipeline("Execution aborted."),
                 execution_time=0,
                 log="Error found while executing pipeline.",
             ),
