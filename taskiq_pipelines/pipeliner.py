@@ -1,5 +1,15 @@
 import json
-from typing import Any, Coroutine, Generic, List, Optional, TypeVar, Union, overload
+from typing import (
+    Any,
+    Coroutine,
+    Generic,
+    List,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import pydantic
 from taskiq import AsyncBroker, AsyncTaskiqTask
@@ -58,7 +68,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             AsyncKicker[Any, Coroutine[Any, Any, _T2]],
             AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
         ],
-        param_name: Optional[str] = None,
+        param_name: Union[Optional[str], Literal[-1]] = None,
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]":
         ...
@@ -70,7 +80,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             AsyncKicker[Any, _T2],
             AsyncTaskiqDecoratedTask[Any, _T2],
         ],
-        param_name: Optional[str] = None,
+        param_name: Union[Optional[str], Literal[-1]] = None,
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]":
         ...
@@ -81,7 +91,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             AsyncKicker[Any, Any],
             AsyncTaskiqDecoratedTask[Any, Any],
         ],
-        param_name: Optional[str] = None,
+        param_name: Union[Optional[str], Literal[-1]] = None,
         **additional_kwargs: Any,
     ) -> Any:
         """
@@ -94,7 +104,8 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         if param_name is specified.
 
         :param task: task to execute.
-        :param param_name: kwarg param name, defaults to None
+        :param param_name: kwarg param name, defaults to None.
+            If set to -1 (EMPTY_PARAM_NAME), result is not passed.
         :param additional_kwargs: additional kwargs to task.
         :return: updated pipeline.
         """
