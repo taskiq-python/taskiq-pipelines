@@ -17,7 +17,7 @@ from taskiq.decor import AsyncTaskiqDecoratedTask
 from taskiq.kicker import AsyncKicker
 from typing_extensions import ParamSpec
 
-from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
+from taskiq_pipelines.constants import CURRENT_STEP, EMPTY_PARAM_NAME, PIPELINE_DATA
 from taskiq_pipelines.steps import FilterStep, MapperStep, SequentialStep, parse_step
 
 _ReturnType = TypeVar("_ReturnType")
@@ -115,6 +115,62 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                 step_data=SequentialStep.from_task(
                     task=task,
                     param_name=param_name,
+                    **additional_kwargs,
+                ).dumps(),
+                task_id="",
+            ),
+        )
+        return self
+
+    @overload
+    def call_after(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        task: Union[
+            AsyncKicker[Any, Coroutine[Any, Any, _T2]],
+            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
+        ],
+        **additional_kwargs: Any,
+    ) -> "Pipeline[_FuncParams, _T2]":
+        ...
+
+    @overload
+    def call_after(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        task: Union[
+            AsyncKicker[Any, _T2],
+            AsyncTaskiqDecoratedTask[Any, _T2],
+        ],
+        **additional_kwargs: Any,
+    ) -> "Pipeline[_FuncParams, _T2]":
+        ...
+
+    def call_after(
+        self,
+        task: Union[
+            AsyncKicker[Any, Any],
+            AsyncTaskiqDecoratedTask[Any, Any],
+        ],
+        **additional_kwargs: Any,
+    ) -> Any:
+        """
+        Adds sequential step.
+
+        This task will be executed right after
+        the previous and result of the previous task
+        is not passed to the next task.
+
+        This is equivalent to call_next(task, param_name=-1).
+
+        :param task: task to execute.
+        :param additional_kwargs: additional kwargs to task.
+        :return: updated pipeline.
+        """
+        self.steps.append(
+            DumpedStep(
+                step_type=SequentialStep.step_name,
+                step_data=SequentialStep.from_task(
+                    task=task,
+                    param_name=EMPTY_PARAM_NAME,
                     **additional_kwargs,
                 ).dumps(),
                 task_id="",
