@@ -1,4 +1,4 @@
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import pydantic
 from taskiq import AsyncBroker, AsyncTaskiqDecoratedTask, TaskiqResult
@@ -25,7 +25,17 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
     additional_kwargs: Dict[str, Any]
 
     @pydantic.validator("param_name")
-    def validate_param_name(cls, value: Union[Optional[str], int]) -> Union[Optional[str], int]:
+    def validate_param_name(
+        self,
+        value: Union[Optional[str], int],
+    ) -> Union[Optional[str], int]:
+        """
+        Validate param_name.
+
+        :param value: value to validate.
+        :raises ValueError: if value is not str, None or -1 (EMPTY_PARAM_NAME).
+        :return: param value.
+        """
         if isinstance(value, int) and value != EMPTY_PARAM_NAME:
             raise ValueError("must be str, None or -1 (EMPTY_PARAM_NAME)")
         return value
