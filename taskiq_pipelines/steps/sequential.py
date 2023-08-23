@@ -5,7 +5,7 @@ from taskiq import AsyncBroker, AsyncTaskiqDecoratedTask, TaskiqResult
 from taskiq.kicker import AsyncKicker
 
 from taskiq_pipelines.abc import AbstractStep
-from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
+from taskiq_pipelines.constants import CURRENT_STEP, EMPTY_PARAM_NAME, PIPELINE_DATA
 
 
 class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
@@ -19,8 +19,26 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
 
     task_name: str
     labels: Dict[str, str]
-    param_name: Optional[str]
+    # order is important here, otherwise pydantic will always choose str.
+    # we use int instead of Literal[-1] because pydantic thinks that -1 is always str.
+    param_name: Union[Optional[int], str]
     additional_kwargs: Dict[str, Any]
+
+    @pydantic.validator("param_name")
+    def validate_param_name(
+        self,
+        value: Union[Optional[str], int],
+    ) -> Union[Optional[str], int]:
+        """
+        Validate param_name.
+
+        :param value: value to validate.
+        :raises ValueError: if value is not str, None or -1 (EMPTY_PARAM_NAME).
+        :return: param value.
+        """
+        if isinstance(value, int) and value != EMPTY_PARAM_NAME:
+            raise ValueError("must be str, None or -1 (EMPTY_PARAM_NAME)")
+        return value
 
     def dumps(self) -> str:
         """
@@ -78,8 +96,10 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
                 **{PIPELINE_DATA: pipe_data, CURRENT_STEP: step_number},  # type: ignore
             )
         )
-        if self.param_name:
+        if isinstance(self.param_name, str):
             self.additional_kwargs[self.param_name] = result.return_value
+            await kicker.kiq(**self.additional_kwargs)
+        elif self.param_name == EMPTY_PARAM_NAME:
             await kicker.kiq(**self.additional_kwargs)
         else:
             await kicker.kiq(result.return_value, **self.additional_kwargs)
@@ -91,7 +111,7 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
             AsyncKicker[Any, Any],
             AsyncTaskiqDecoratedTask[Any, Any],
         ],
-        param_name: Optional[str],
+        param_name: Union[Optional[str], int],
         **additional_kwargs: Any,
     ) -> "SequentialStep":
         """
