@@ -81,7 +81,7 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
 
         :return: returns json.
         """
-        return self.json()
+        return self.model_dump_json()
 
     @classmethod
     def loads(cls, data: str) -> "MapperStep":
@@ -91,7 +91,7 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         :param data: dumped data.
         :return: parsed step.
         """
-        return pydantic.parse_raw_as(MapperStep, data)
+        return pydantic.TypeAdapter(MapperStep).validate_json(data)
 
     async def act(
         self,

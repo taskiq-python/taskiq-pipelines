@@ -46,7 +46,7 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
 
         :return: returns json.
         """
-        return self.json()
+        return self.model_dump_json()
 
     @classmethod
     def loads(cls, data: str) -> "SequentialStep":
@@ -56,7 +56,7 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
         :param data: dumped data.
         :return: parsed step.
         """
-        return pydantic.parse_raw_as(SequentialStep, data)
+        return pydantic.TypeAdapter(SequentialStep).validate_json(data)
 
     async def act(
         self,
