@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taskiq-pipelines"
-version = "0.1.0"
+version = "0.1.1"
 description = "Taskiq pipelines for task chaining."
 authors = ["Pavel Kirilin <win10@list.ru>"]
 readme = "README.md"
@@ -27,7 +27,7 @@ keywords = ["taskiq", "pipelines", "tasks", "distributed", "async"]
 python = "^3.8.1"
 taskiq = ">=0.0.8, <1"
 typing-extensions = "^4.3.0"
-pydantic = "^1.6.2"
+pydantic = "^2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7"

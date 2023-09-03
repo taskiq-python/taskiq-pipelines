@@ -88,6 +88,8 @@ ignore =
   ; Consider possible security implications associated with pickle module
   ; Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue
   S403, S301
+  ; Found too many imported names from a module
+  WPS235
 
 per-file-ignores =
   ; all tests
@@ -104,6 +106,10 @@ per-file-ignores =
   DAR101,
   ; Found too many arguments
   WPS211,
+  ; Found nested function
+  WPS430,
+  ; Found too short name
+  WPS111,
 
   ; all init files
   __init__.py:

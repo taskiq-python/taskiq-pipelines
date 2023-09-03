@@ -138,10 +138,13 @@ We have a few steps available for chaining calls:
 This type of step is just an ordinary call of the function.
 If you haven't specified `param_name` argument, then the result
 of the previous step will be passed as the first argument of the function.
-Uf you did specify the `param_name` argument, then the result of the previous
+If you did specify the `param_name` argument, then the result of the previous
 step can be found in key word arguments with the param name you specified.
 
 You can add sequential steps with `.call_next` method of the pipeline.
+
+If you don't want to pass the result of the previous step to the next one,
+you can use `.call_after` method of the pipeline.
 
 ### Mapper step
 

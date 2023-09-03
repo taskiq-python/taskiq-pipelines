@@ -42,7 +42,9 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         pipeline_data = message.labels[PIPELINE_DATA]
         try:
-            steps_data = pydantic.parse_raw_as(List[DumpedStep], pipeline_data)
+            steps_data = pydantic.TypeAdapter(List[DumpedStep]).validate_json(
+                pipeline_data,
+            )
         except ValueError:
             return
         if current_step_num + 1 >= len(steps_data):
@@ -99,7 +101,7 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         pipe_data = message.labels[PIPELINE_DATA]
         try:
-            steps = pydantic.parse_raw_as(List[DumpedStep], pipe_data)
+            steps = pydantic.TypeAdapter(List[DumpedStep]).validate_json(pipe_data)
         except ValueError:
             return
         if current_step_num == len(steps) - 1:

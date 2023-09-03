@@ -84,7 +84,7 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
 
         :return: returns json.
         """
-        return self.json()
+        return self.model_dump_json()
 
     @classmethod
     def loads(cls, data: str) -> "FilterStep":
@@ -94,7 +94,7 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
         :param data: dumped data.
         :return: parsed step.
         """
-        return pydantic.parse_raw_as(FilterStep, data)
+        return pydantic.TypeAdapter(FilterStep).validate_json(data)
 
     async def act(
         self,
