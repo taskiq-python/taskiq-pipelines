@@ -328,7 +328,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         :returns: serialized pipeline.
         """
         return json.dumps(
-            [step.dict() for step in self.steps],
+            [step.model_dump() for step in self.steps],
         )
 
     @classmethod
@@ -344,7 +344,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         :return: new
         """
         pipe: "Pipeline[Any, Any]" = Pipeline(broker)
-        pipe.steps = pydantic.parse_raw_as(List[DumpedStep], pipe_data)
+        pipe.steps = pydantic.TypeAdapter(List[DumpedStep]).validate_json(pipe_data)
         return pipe
 
     async def kiq(
