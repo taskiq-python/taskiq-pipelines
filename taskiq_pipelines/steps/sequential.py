@@ -24,22 +24,6 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
     param_name: Union[Optional[int], str]
     additional_kwargs: Dict[str, Any]
 
-    @pydantic.validator("param_name")
-    def validate_param_name(
-        self,
-        value: Union[Optional[str], int],
-    ) -> Union[Optional[str], int]:
-        """
-        Validate param_name.
-
-        :param value: value to validate.
-        :raises ValueError: if value is not str, None or -1 (EMPTY_PARAM_NAME).
-        :return: param value.
-        """
-        if isinstance(value, int) and value != EMPTY_PARAM_NAME:
-            raise ValueError("must be str, None or -1 (EMPTY_PARAM_NAME)")
-        return value
-
     def dumps(self) -> str:
         """
         Dumps step as string.

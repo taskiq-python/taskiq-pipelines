@@ -10,7 +10,7 @@ logger = getLogger(__name__)
 
 
 def parse_step(step_type: str, step_data: str) -> AbstractStep:
-    step_cls = AbstractStep.known_steps.get(step_type)
+    step_cls = AbstractStep._known_steps.get(step_type)
     if step_cls is None:
         logger.warning(f"Unknown step type: {step_type}")
         raise ValueError("Unknown step type.")
