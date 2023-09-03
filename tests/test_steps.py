@@ -8,8 +8,7 @@ from taskiq_pipelines import Pipeline, PipelineMiddleware
 
 @pytest.mark.anyio
 async def test_success() -> None:
-    """Test stub for CI."""
-
+    """Tests that sequential step works as expected."""
     broker = InMemoryBroker().with_middlewares(PipelineMiddleware())
 
     @broker.task
@@ -28,8 +27,7 @@ async def test_success() -> None:
 
 @pytest.mark.anyio
 async def test_mapping_success() -> None:
-    """Test stub for CI."""
-
+    """Test that map step works as expected."""
     broker = InMemoryBroker().with_middlewares(PipelineMiddleware())
 
     @broker.task

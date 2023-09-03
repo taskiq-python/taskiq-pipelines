@@ -111,7 +111,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         """
         self.steps.append(
             DumpedStep(
-                step_type=SequentialStep._step_name,
+                step_type=SequentialStep._step_name,  # noqa: WPS437
                 step_data=SequentialStep.from_task(
                     task=task,
                     param_name=param_name,
@@ -167,7 +167,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         """
         self.steps.append(
             DumpedStep(
-                step_type=SequentialStep._step_name,
+                step_type=SequentialStep._step_name,  # noqa: WPS437
                 step_data=SequentialStep.from_task(
                     task=task,
                     param_name=EMPTY_PARAM_NAME,
@@ -236,7 +236,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         """
         self.steps.append(
             DumpedStep(
-                step_type=MapperStep._step_name,
+                step_type=MapperStep._step_name,  # noqa: WPS437
                 step_data=MapperStep.from_task(
                     task=task,
                     param_name=param_name,
@@ -308,7 +308,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         """
         self.steps.append(
             DumpedStep(
-                step_type=FilterStep._step_name,
+                step_type=FilterStep._step_name,  # noqa: WPS437
                 step_data=FilterStep.from_task(
                     task=task,
                     param_name=param_name,

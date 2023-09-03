@@ -106,6 +106,10 @@ per-file-ignores =
   DAR101,
   ; Found too many arguments
   WPS211,
+  ; Found nested function
+  WPS430,
+  ; Found too short name
+  WPS111,
 
   ; all init files
   __init__.py:
