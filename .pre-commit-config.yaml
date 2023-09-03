@@ -41,7 +41,7 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
-        args: [--count, taskiq_pipelines]
+        args: [--count, taskiq_pipelines, tests]
 
       - id: mypy
         name: Validate types with MyPy

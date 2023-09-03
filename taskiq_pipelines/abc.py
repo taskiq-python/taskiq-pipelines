@@ -9,16 +9,16 @@ _T = TypeVar("_T")  # noqa: WPS111
 class AbstractStep(ABC):
     """Abstract pipeline step."""
 
-    step_name: str
-    known_steps: "Dict[str, Type[AbstractStep]]" = {}
+    _step_name: str
+    _known_steps: "Dict[str, Type[AbstractStep]]" = {}
 
     def __init_subclass__(cls, step_name: str, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         # Sets step name to the step.
-        cls.step_name = step_name
+        cls._step_name = step_name
         # Registers new subclass in the dict of
         # known steps.
-        cls.known_steps[step_name] = cls
+        cls._known_steps[step_name] = cls
 
     @abstractmethod
     def dumps(self) -> str:
