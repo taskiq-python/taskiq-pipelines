@@ -78,24 +78,6 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
     skip_errors: bool
     check_interval: float
 
-    def dumps(self) -> str:
-        """
-        Dumps step as string.
-
-        :return: returns json.
-        """
-        return self.model_dump_json()
-
-    @classmethod
-    def loads(cls, data: str) -> "FilterStep":
-        """
-        Parses mapper step from string.
-
-        :param data: dumped data.
-        :return: parsed step.
-        """
-        return pydantic.TypeAdapter(FilterStep).validate_json(data)
-
     async def act(
         self,
         broker: AsyncBroker,

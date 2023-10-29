@@ -21,24 +21,6 @@ class AbstractStep(ABC):
         cls._known_steps[step_name] = cls
 
     @abstractmethod
-    def dumps(self) -> str:
-        """
-        Generate parsable string.
-
-        :return: dumped object.
-        """
-
-    @classmethod
-    @abstractmethod
-    def loads(cls: Type[_T], data: str) -> _T:
-        """
-        Method to load previously dumped data.
-
-        :param data: dumped data.
-        :return: instance of a class.
-        """
-
-    @abstractmethod
     async def act(
         self,
         broker: AsyncBroker,

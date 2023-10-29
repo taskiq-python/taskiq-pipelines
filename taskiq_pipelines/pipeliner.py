@@ -1,7 +1,7 @@
-import json
 from typing import (
     Any,
     Coroutine,
+    Dict,
     Generic,
     List,
     Literal,
@@ -29,8 +29,11 @@ class DumpedStep(pydantic.BaseModel):
     """Dumped state model."""
 
     step_type: str
-    step_data: str
+    step_data: Dict[str, Any]
     task_id: str
+
+
+DumpedSteps = pydantic.RootModel[List[DumpedStep]]
 
 
 class Pipeline(Generic[_FuncParams, _ReturnType]):
@@ -116,7 +119,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                     task=task,
                     param_name=param_name,
                     **additional_kwargs,
-                ).dumps(),
+                ).model_dump(),
                 task_id="",
             ),
         )
@@ -172,7 +175,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                     task=task,
                     param_name=EMPTY_PARAM_NAME,
                     **additional_kwargs,
-                ).dumps(),
+                ).model_dump(),
                 task_id="",
             ),
         )
@@ -243,7 +246,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                     skip_errors=skip_errors,
                     check_interval=check_interval,
                     **additional_kwargs,
-                ).dumps(),
+                ).model_dump(),
                 task_id="",
             ),
         )
@@ -315,24 +318,24 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                     skip_errors=skip_errors,
                     check_interval=check_interval,
                     **additional_kwargs,
-                ).dumps(),
+                ).model_dump(),
                 task_id="",
             ),
         )
         return self
 
-    def dumps(self) -> str:
+    def dumpb(self) -> bytes:
         """
         Dumps current pipeline as string.
 
         :returns: serialized pipeline.
         """
-        return json.dumps(
-            [step.model_dump() for step in self.steps],
+        return self.broker.serializer.dumpb(
+            DumpedSteps.model_validate(self.steps).model_dump(),
         )
 
     @classmethod
-    def loads(cls, broker: AsyncBroker, pipe_data: str) -> "Pipeline[Any, Any]":
+    def loadb(cls, broker: AsyncBroker, pipe_data: bytes) -> "Pipeline[Any, Any]":
         """
         Parses serialized pipeline.
 
@@ -344,7 +347,8 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         :return: new
         """
         pipe: "Pipeline[Any, Any]" = Pipeline(broker)
-        pipe.steps = pydantic.TypeAdapter(List[DumpedStep]).validate_json(pipe_data)
+        data = broker.serializer.loadb(pipe_data)
+        pipe.steps = DumpedSteps.model_validate(data)  # type: ignore[assignment]
         return pipe
 
     async def kiq(
@@ -383,7 +387,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             )
             .with_task_id(step.task_id)
             .with_labels(
-                **{CURRENT_STEP: 0, PIPELINE_DATA: self.dumps()},  # type: ignore
+                **{CURRENT_STEP: 0, PIPELINE_DATA: self.dumpb()},  # type: ignore
             )
         )
         taskiq_task = await kicker.kiq(*args, **kwargs)

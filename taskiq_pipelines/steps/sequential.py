@@ -24,24 +24,6 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
     param_name: Union[Optional[int], str]
     additional_kwargs: Dict[str, Any]
 
-    def dumps(self) -> str:
-        """
-        Dumps step as string.
-
-        :return: returns json.
-        """
-        return self.model_dump_json()
-
-    @classmethod
-    def loads(cls, data: str) -> "SequentialStep":
-        """
-        Parses sequential step from string.
-
-        :param data: dumped data.
-        :return: parsed step.
-        """
-        return pydantic.TypeAdapter(SequentialStep).validate_json(data)
-
     async def act(
         self,
         broker: AsyncBroker,
