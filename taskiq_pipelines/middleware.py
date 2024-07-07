@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 class PipelineMiddleware(TaskiqMiddleware):
     """Pipeline middleware."""
 
-    async def post_save(  # noqa: C901, WPS212
+    async def post_save(  # noqa: C901, WPS210, WPS212
         self,
         message: "TaskiqMessage",
         result: "TaskiqResult[Any]",
@@ -41,9 +41,21 @@ class PipelineMiddleware(TaskiqMiddleware):
             logger.warn("Pipline data not found. Execution flow is broken.")
             return
         pipeline_data = message.labels[PIPELINE_DATA]
+        # workaround for obligatory casting label values to `str`
+        # in `AsyncKicker._prepare_message`.
+        # The trick can be removed later after adding explicit `bytes` support.
+        if (  # noqa: WPS337
+            isinstance(pipeline_data, str)
+            and pipeline_data.startswith("b'")
+            and pipeline_data.endswith("'")
+        ):
+            pipeline_data2 = pipeline_data[2:-1].encode()
+        else:
+            pipeline_data2 = pipeline_data
+        parsed_data = self.broker.serializer.loadb(pipeline_data2)
         try:
-            steps_data = pydantic.TypeAdapter(List[DumpedStep]).validate_json(
-                pipeline_data,
+            steps_data = pydantic.TypeAdapter(List[DumpedStep]).validate_python(
+                parsed_data,
             )
         except ValueError:
             return
