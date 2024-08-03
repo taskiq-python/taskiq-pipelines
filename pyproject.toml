@@ -25,7 +25,7 @@ keywords = ["taskiq", "pipelines", "tasks", "distributed", "async"]
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-taskiq = ">=0.10.1, <1"
+taskiq = ">=0.11.0, <1"
 typing-extensions = "^4.3.0"
 pydantic = "^2"
 
