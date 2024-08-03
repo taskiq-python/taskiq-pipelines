@@ -47,10 +47,8 @@ class PipelineMiddleware(TaskiqMiddleware):
                 parsed_data,
             )
         except ValueError as err:
-            print(err)
             logger.warn("Cannot parse pipline_data: %s", err, exc_info=True)
             return
-        print("PARSED STEPS")
         if current_step_num + 1 >= len(steps_data):
             logger.debug("Pipeline is completed.")
             return
