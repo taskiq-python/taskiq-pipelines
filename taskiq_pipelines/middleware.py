@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 class PipelineMiddleware(TaskiqMiddleware):
     """Pipeline middleware."""
 
-    async def post_save(  # noqa: C901, WPS210, WPS212
+    async def post_save(  # noqa: PLR0911
         self,
         message: "TaskiqMessage",
         result: "TaskiqResult[Any]",

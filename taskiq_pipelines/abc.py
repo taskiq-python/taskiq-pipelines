@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Type
 
 from taskiq import AsyncBroker, TaskiqResult
-
-_T = TypeVar("_T")  # noqa: WPS111
+from typing_extensions import ClassVar
 
 
 class AbstractStep(ABC):
     """Abstract pipeline step."""
 
     _step_name: str
-    _known_steps: "Dict[str, Type[AbstractStep]]" = {}
+    _known_steps: ClassVar[Dict[str, Type["AbstractStep"]]] = {}
 
     def __init_subclass__(cls, step_name: str, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
