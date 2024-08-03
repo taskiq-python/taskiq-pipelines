@@ -5,7 +5,7 @@ class PipelineError(TaskiqError):
     """Generic pipeline error."""
 
 
-class AbortPipeline(PipelineError):
+class AbortPipeline(PipelineError):  # noqa: N818
     """
     Abort curret pipeline execution.
 

@@ -91,11 +91,8 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
         :param additional_kwargs: additional kwargs to task.
         :return: new sequential step.
         """
-        if isinstance(task, AsyncTaskiqDecoratedTask):
-            kicker = task.kicker()
-        else:
-            kicker = task
-        message = kicker._prepare_message()  # noqa: WPS437
+        kicker = task.kicker() if isinstance(task, AsyncTaskiqDecoratedTask) else task
+        message = kicker._prepare_message()
         return SequentialStep(
             task_name=message.task_name,
             labels=message.labels,

@@ -19,7 +19,7 @@ from taskiq_pipelines.exceptions import AbortPipeline
 
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.wait_tasks")
-async def wait_tasks(  # noqa: C901, WPS231
+async def wait_tasks(
     task_ids: List[str],
     check_interval: float,
     skip_errors: bool = True,
@@ -45,7 +45,7 @@ async def wait_tasks(  # noqa: C901, WPS231
     ordered_ids = task_ids[:]
     tasks_set = set(task_ids)
     while tasks_set:
-        for task_id in task_ids:  # noqa: WPS327
+        for task_id in task_ids:
             if await context.broker.result_backend.is_result_ready(task_id):
                 try:
                     tasks_set.remove(task_id)
@@ -55,7 +55,7 @@ async def wait_tasks(  # noqa: C901, WPS231
             await asyncio.sleep(check_interval)
 
     results = []
-    for task_id in ordered_ids:  # noqa: WPS440
+    for task_id in ordered_ids:
         result = await context.broker.result_backend.get_result(task_id)
         if result.is_err:
             if skip_errors:
@@ -154,11 +154,8 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         :param additional_kwargs: additional function's kwargs.
         :return: new mapper step.
         """
-        if isinstance(task, AsyncTaskiqDecoratedTask):
-            kicker = task.kicker()
-        else:
-            kicker = task
-        message = kicker._prepare_message()  # noqa: WPS437
+        kicker = task.kicker() if isinstance(task, AsyncTaskiqDecoratedTask) else task
+        message = kicker._prepare_message()
         return MapperStep(
             task_name=message.task_name,
             labels=message.labels,

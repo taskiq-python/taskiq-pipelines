@@ -13,7 +13,7 @@ from taskiq_pipelines.exceptions import AbortPipeline
 
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.filter_tasks")
-async def filter_tasks(  # noqa: C901, WPS210, WPS231
+async def filter_tasks(
     task_ids: List[str],
     parent_task_id: str,
     check_interval: float,
@@ -43,7 +43,7 @@ async def filter_tasks(  # noqa: C901, WPS210, WPS231
     ordered_ids = task_ids[:]
     tasks_set = set(task_ids)
     while tasks_set:
-        for task_id in task_ids:  # noqa: WPS327
+        for task_id in task_ids:
             if await context.broker.result_backend.is_result_ready(task_id):
                 try:
                     tasks_set.remove(task_id)
@@ -54,9 +54,9 @@ async def filter_tasks(  # noqa: C901, WPS210, WPS231
 
     results = await context.broker.result_backend.get_result(parent_task_id)
     filtered_results = []
-    for task_id, value in zip(  # type: ignore  # noqa: WPS352, WPS440
+    for task_id, value in zip(
         ordered_ids,
-        results.return_value,
+        results.return_value,  # type: ignore
     ):
         result = await context.broker.result_backend.get_result(task_id)
         if result.is_err:
@@ -117,15 +117,21 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
             else:
                 task = await kicker.kiq(item, **self.additional_kwargs)
             sub_task_ids.append(task.task_id)
-        await filter_tasks.kicker().with_task_id(task_id).with_broker(
-            broker,
-        ).with_labels(
-            **{CURRENT_STEP: step_number, PIPELINE_DATA: pipe_data},  # type: ignore
-        ).kiq(
-            sub_task_ids,
-            parent_task_id,
-            check_interval=self.check_interval,
-            skip_errors=self.skip_errors,
+        await (
+            filter_tasks.kicker()
+            .with_task_id(task_id)
+            .with_broker(
+                broker,
+            )
+            .with_labels(
+                **{CURRENT_STEP: step_number, PIPELINE_DATA: pipe_data},  # type: ignore
+            )
+            .kiq(
+                sub_task_ids,
+                parent_task_id,
+                check_interval=self.check_interval,
+                skip_errors=self.skip_errors,
+            )
         )
 
     @classmethod
@@ -151,11 +157,8 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
         :param additional_kwargs: additional function's kwargs.
         :return: new mapper step.
         """
-        if isinstance(task, AsyncTaskiqDecoratedTask):
-            kicker = task.kicker()
-        else:
-            kicker = task
-        message = kicker._prepare_message()  # noqa: WPS437
+        kicker = task.kicker() if isinstance(task, AsyncTaskiqDecoratedTask) else task
+        message = kicker._prepare_message()
         return FilterStep(
             task_name=message.task_name,
             labels=message.labels,
