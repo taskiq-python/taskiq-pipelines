@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, List
+from typing import Any, List, Optional
 
 import pydantic
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
@@ -110,7 +110,11 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         await self.fail_pipeline(steps[-1].task_id, result.error)
 
-    async def fail_pipeline(self, last_task_id: str, abort: AbortPipeline | None = None) -> None:
+    async def fail_pipeline(
+        self,
+        last_task_id: str,
+        abort: Optional[BaseException] = None,
+    ) -> None:
         """
         This function aborts pipeline.
 

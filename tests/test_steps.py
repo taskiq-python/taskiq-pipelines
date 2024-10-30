@@ -1,10 +1,9 @@
-import sys
 from typing import List
 
 import pytest
 from taskiq import InMemoryBroker
 
-from taskiq_pipelines import Pipeline, PipelineMiddleware, AbortPipeline
+from taskiq_pipelines import AbortPipeline, Pipeline, PipelineMiddleware
 
 
 @pytest.mark.anyio
@@ -49,7 +48,7 @@ async def test_mapping_success() -> None:
 async def test_abort_pipeline() -> None:
     """Test AbortPipeline."""
     broker = InMemoryBroker().with_middlewares(PipelineMiddleware())
-    text = 'task was aborted'
+    text = "task was aborted"
 
     @broker.task
     def normal_task(i: bool) -> bool:
