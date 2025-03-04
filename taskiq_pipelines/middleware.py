@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, List
+from typing import Any, List, Optional
 
 import pydantic
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
@@ -108,9 +108,13 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         if current_step_num == len(steps) - 1:
             return
-        await self.fail_pipeline(steps[-1].task_id)
+        await self.fail_pipeline(steps[-1].task_id, result.error)
 
-    async def fail_pipeline(self, last_task_id: str) -> None:
+    async def fail_pipeline(
+        self,
+        last_task_id: str,
+        abort: Optional[BaseException] = None,
+    ) -> None:
         """
         This function aborts pipeline.
 
@@ -118,13 +122,14 @@ class PipelineMiddleware(TaskiqMiddleware):
         the last task in the pipeline.
 
         :param last_task_id: id of the last task.
+        :param abort: caught earlier exception or default
         """
         await self.broker.result_backend.set_result(
             last_task_id,
             TaskiqResult(
                 is_err=True,
                 return_value=None,  # type: ignore
-                error=AbortPipeline("Execution aborted."),
+                error=abort or AbortPipeline("Execution aborted."),
                 execution_time=0,
                 log="Error found while executing pipeline.",
             ),
