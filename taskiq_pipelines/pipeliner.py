@@ -73,8 +73,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         ],
         param_name: Union[Optional[str], Literal[-1]] = None,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, _T2]":
-        ...
+    ) -> "Pipeline[_FuncParams, _T2]": ...
 
     @overload
     def call_next(
@@ -85,8 +84,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         ],
         param_name: Union[Optional[str], Literal[-1]] = None,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, _T2]":
-        ...
+    ) -> "Pipeline[_FuncParams, _T2]": ...
 
     def call_next(
         self,
@@ -133,8 +131,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
         ],
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, _T2]":
-        ...
+    ) -> "Pipeline[_FuncParams, _T2]": ...
 
     @overload
     def call_after(
@@ -144,8 +141,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             AsyncTaskiqDecoratedTask[Any, _T2],
         ],
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, _T2]":
-        ...
+    ) -> "Pipeline[_FuncParams, _T2]": ...
 
     def call_after(
         self,
@@ -192,8 +188,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, List[_T2]]":
-        ...
+    ) -> "Pipeline[_FuncParams, List[_T2]]": ...
 
     @overload
     def map(
@@ -206,8 +201,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, List[_T2]]":
-        ...
+    ) -> "Pipeline[_FuncParams, List[_T2]]": ...
 
     def map(
         self,
@@ -263,8 +257,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, _ReturnType]":
-        ...
+    ) -> "Pipeline[_FuncParams, _ReturnType]": ...
 
     @overload
     def filter(
@@ -277,8 +270,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, _ReturnType]":
-        ...
+    ) -> "Pipeline[_FuncParams, _ReturnType]": ...
 
     def filter(
         self,

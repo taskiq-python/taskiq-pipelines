@@ -1,4 +1,5 @@
 """Package with default pipeline steps."""
+
 from logging import getLogger
 from typing import Any, Dict
 
@@ -19,7 +20,7 @@ def parse_step(step_type: str, step_data: Dict[str, Any]) -> AbstractStep:
 
 
 __all__ = [
+    "FilterStep",
     "MapperStep",
     "SequentialStep",
-    "FilterStep",
 ]
