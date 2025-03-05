@@ -70,9 +70,9 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         self: "Pipeline[_FuncParams, _ReturnType]",
         task: Union[
             AsyncKicker[Any, Coroutine[Any, Any, _T2]],
-            AsyncKicker[Any, CoroutineType[Any, Any, _T2]],
+            AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"],
             AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
-            AsyncTaskiqDecoratedTask[Any, CoroutineType[Any, Any, _T2]],
+            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"],
         ],
         param_name: Union[Optional[str], Literal[-1]] = None,
         **additional_kwargs: Any,
@@ -131,9 +131,9 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         self: "Pipeline[_FuncParams, _ReturnType]",
         task: Union[
             AsyncKicker[Any, Coroutine[Any, Any, _T2]],
-            AsyncKicker[Any, CoroutineType[Any, Any, _T2]],
+            AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"],
             AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
-            AsyncTaskiqDecoratedTask[Any, CoroutineType[Any, Any, _T2]],
+            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"],
         ],
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]": ...
@@ -187,9 +187,9 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         self: "Pipeline[_FuncParams, _ReturnType]",
         task: Union[
             AsyncKicker[Any, Coroutine[Any, Any, _T2]],
-            AsyncKicker[Any, CoroutineType[Any, Any, _T2]],
+            AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"],
             AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
-            AsyncTaskiqDecoratedTask[Any, CoroutineType[Any, Any, _T2]],
+            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"],
         ],
         param_name: Optional[str] = None,
         skip_errors: bool = False,
@@ -258,9 +258,9 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         self: "Pipeline[_FuncParams, _ReturnType]",
         task: Union[
             AsyncKicker[Any, Coroutine[Any, Any, bool]],
-            AsyncKicker[Any, CoroutineType[Any, Any, bool]],
+            AsyncKicker[Any, "CoroutineType[Any, Any, bool]"],
             AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, bool]],
-            AsyncTaskiqDecoratedTask[Any, CoroutineType[Any, Any, bool]],
+            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, bool]"],
         ],
         param_name: Optional[str] = None,
         skip_errors: bool = False,
