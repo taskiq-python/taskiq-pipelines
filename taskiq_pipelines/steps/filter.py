@@ -2,18 +2,18 @@ import asyncio
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pydantic
-from taskiq import AsyncBroker, Context, TaskiqDepends, TaskiqError, TaskiqResult
+from taskiq import AsyncBroker, Context, TaskiqDepends, TaskiqResult
 from taskiq.brokers.shared_broker import async_shared_broker
 from taskiq.decor import AsyncTaskiqDecoratedTask
 from taskiq.kicker import AsyncKicker
 
 from taskiq_pipelines.abc import AbstractStep
 from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
-from taskiq_pipelines.exceptions import AbortPipeline
+from taskiq_pipelines.exceptions import AbortPipeline, FilterError
 
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.filter_tasks")
-async def filter_tasks(
+async def filter_tasks(  # noqa: C901
     task_ids: List[str],
     parent_task_id: str,
     check_interval: float,
@@ -62,7 +62,11 @@ async def filter_tasks(
         if result.is_err:
             if skip_errors:
                 continue
-            raise TaskiqError(f"Task {task_id} returned error. Filtering failed.")
+            err_cause = None
+            if isinstance(result.error, BaseException):
+                err_cause = result.error
+            raise FilterError(task_id=task_id, error=result.error) from err_cause
+
         if result.return_value:
             filtered_results.append(value)
     return filtered_results
@@ -103,7 +107,7 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
         :raises AbortPipeline: if result is not iterable.
         """
         if not isinstance(result.return_value, Iterable):
-            raise AbortPipeline("Result of the previous task is not iterable.")
+            raise AbortPipeline(reason="Result of the previous task is not iterable.")
         sub_task_ids = []
         for item in result.return_value:
             kicker: "AsyncKicker[Any, Any]" = AsyncKicker(

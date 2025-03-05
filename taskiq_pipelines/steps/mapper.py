@@ -7,7 +7,6 @@ from taskiq import (
     AsyncTaskiqDecoratedTask,
     Context,
     TaskiqDepends,
-    TaskiqError,
     TaskiqResult,
     async_shared_broker,
 )
@@ -15,7 +14,7 @@ from taskiq.kicker import AsyncKicker
 
 from taskiq_pipelines.abc import AbstractStep
 from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
-from taskiq_pipelines.exceptions import AbortPipeline
+from taskiq_pipelines.exceptions import AbortPipeline, MappingError
 
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.wait_tasks")
@@ -60,7 +59,11 @@ async def wait_tasks(
         if result.is_err:
             if skip_errors:
                 continue
-            raise TaskiqError(f"Task {task_id} returned error. Mapping failed.")
+            err_cause = None
+            if isinstance(result.error, BaseException):
+                err_cause = result.error
+            raise MappingError(task_id=task_id, error=result.error) from err_cause
+
         results.append(result.return_value)
     return results
 
@@ -106,7 +109,7 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         sub_task_ids: List[str] = []
         return_value = result.return_value
         if not isinstance(return_value, Iterable):
-            raise AbortPipeline("Result of the previous task is not iterable.")
+            raise AbortPipeline(reason="Result of the previous task is not iterable.")
 
         for item in return_value:
             kicker: "AsyncKicker[Any, Any]" = AsyncKicker(
@@ -121,14 +124,20 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
                 task = await kicker.kiq(item, **self.additional_kwargs)
             sub_task_ids.append(task.task_id)
 
-        await wait_tasks.kicker().with_task_id(task_id).with_broker(
-            broker,
-        ).with_labels(
-            **{CURRENT_STEP: step_number, PIPELINE_DATA: pipe_data},  # type: ignore
-        ).kiq(
-            sub_task_ids,
-            check_interval=self.check_interval,
-            skip_errors=self.skip_errors,
+        await (
+            wait_tasks.kicker()
+            .with_task_id(task_id)
+            .with_broker(
+                broker,
+            )
+            .with_labels(
+                **{CURRENT_STEP: step_number, PIPELINE_DATA: pipe_data},  # type: ignore
+            )
+            .kiq(
+                sub_task_ids,
+                check_interval=self.check_interval,
+                skip_errors=self.skip_errors,
+            )
         )
 
     @classmethod

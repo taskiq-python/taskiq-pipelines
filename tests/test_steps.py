@@ -57,7 +57,7 @@ async def test_abort_pipeline() -> None:
     @broker.task
     def aborting_task(i: int) -> bool:
         if i:
-            raise AbortPipeline(text)
+            raise AbortPipeline(reason=text)
         return True
 
     pipe = Pipeline(broker, aborting_task).call_next(normal_task)
@@ -70,4 +70,4 @@ async def test_abort_pipeline() -> None:
     res = await sent.wait_result()
     assert res.is_err is True
     assert res.return_value is None
-    assert res.error.args[0] == text
+    assert text in res.error.args[0]

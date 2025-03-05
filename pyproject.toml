@@ -25,20 +25,20 @@ homepage = "https://github.com/taskiq-python/taskiq-pipelines"
 keywords = ["taskiq", "pipelines", "tasks", "distributed", "async"]
 
 [tool.poetry.dependencies]
-python = "^3.8.1"
-taskiq = ">=0.11.0, <1"
+python = "^3.9"
+taskiq = ">=0.11.12, <1"
 typing-extensions = "^4.3.0"
 pydantic = "^2"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7"
-black = { version = "^22.6.0", allow-prereleases = true }
-pytest-cov = "^3.0.0"
-anyio = "^3.6.1"
-pre-commit = "^2.20.0"
+pytest = "^8"
+black = { version = "^25", allow-prereleases = true }
+pytest-cov = "^6"
+anyio = "^4"
+pre-commit = "^4"
 mypy = "^1"
-pytest-xdist = { version = "^2.5.0", extras = ["psutil"] }
-ruff = "^0.5.6"
+pytest-xdist = { version = "^3", extras = ["psutil"] }
+ruff = "^0.9.9"
 
 [tool.mypy]
 strict = true
@@ -97,8 +97,6 @@ lint.ignore = [
     "D401",    # First line should be in imperative mood
     "D104",    # Missing docstring in public package
     "D100",    # Missing docstring in public module
-    "ANN102",  # Missing type annotation for self in method
-    "ANN101",  # Missing type annotation for argument
     "ANN401",  # typing.Any are disallowed in `**kwargs
     "PLR0913", # Too many arguments for function call
     "D106",    # Missing docstring in public nested class
