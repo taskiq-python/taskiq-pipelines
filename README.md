@@ -26,11 +26,7 @@ from taskiq_pipelines.middleware import PipelineMiddleware
 my_super_broker = ...
 
 
-my_super_broker.add_middlewares(
-    [
-        PipelineMiddleware(),
-    ]
-)
+my_super_broker.add_middlewares(PipelineMiddleware())
 ```
 
 Also we have to admit that your broker MUST use result_backend that
@@ -49,7 +45,7 @@ from taskiq.brokers.inmemory_broker import InMemoryBroker
 from taskiq_pipelines import PipelineMiddleware, Pipeline
 
 broker = InMemoryBroker()
-broker.add_middlewares([PipelineMiddleware()])
+broker.add_middlewares(PipelineMiddleware())
 
 
 @broker.task
