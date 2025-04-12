@@ -169,7 +169,7 @@ You can add filters by calling `.filter` method of the pipeline.
 This step groups together multiple tasks and sends them after the previous steps.
 All tasks will be executed in parallel to each other and collected to a single tuple.
 
-To create a group you need to use `Group` class from `taskiq_pipelienes` like this:
+To create a group you need to use `Group` class from `taskiq_pipelines` like this:
 
 ```python
 import asyncio
