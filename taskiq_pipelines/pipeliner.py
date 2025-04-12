@@ -20,6 +20,8 @@ from typing_extensions import ParamSpec
 
 from taskiq_pipelines.constants import CURRENT_STEP, EMPTY_PARAM_NAME, PIPELINE_DATA
 from taskiq_pipelines.steps import FilterStep, MapperStep, SequentialStep, parse_step
+from taskiq_pipelines.steps.group import GroupStep
+from taskiq_pipelines.task_group import Group
 
 _ReturnType = TypeVar("_ReturnType")
 _FuncParams = ParamSpec("_FuncParams")
@@ -324,6 +326,31 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             ),
         )
         return self
+
+    def group(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        group: Group[_T2],
+    ) -> "Pipeline[_FuncParams, _T2]":
+        """
+        Add group task execution step.
+
+        This step will run all tasks in parallel
+        and will wait for all of them to finish.
+
+        Results of all tasks will be returned as an iterable
+        where each item is a result of the task in the group
+        with the same order.
+
+        :param group: group to execute.
+        """
+        self.steps.append(
+            DumpedStep(
+                step_type=GroupStep._step_name,
+                step_data=group.to_step().model_dump(),
+                task_id="",
+            ),
+        )
+        return self  # type: ignore
 
     def dumpb(self) -> bytes:
         """

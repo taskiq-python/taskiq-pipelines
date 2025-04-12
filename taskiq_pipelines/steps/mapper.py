@@ -1,4 +1,5 @@
 import asyncio
+from logging import getLogger
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pydantic
@@ -16,12 +17,15 @@ from taskiq_pipelines.abc import AbstractStep
 from taskiq_pipelines.constants import CURRENT_STEP, PIPELINE_DATA
 from taskiq_pipelines.exceptions import AbortPipeline, MappingError
 
+logger = getLogger("taskiq_pipelines")
+
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.wait_tasks")
-async def wait_tasks(
+async def wait_tasks(  # noqa: C901
     task_ids: List[str],
     check_interval: float,
     skip_errors: bool = True,
+    none_if_errors: bool = False,
     context: Context = TaskiqDepends(),
 ) -> List[Any]:
     """
@@ -53,11 +57,15 @@ async def wait_tasks(
         if tasks_set:
             await asyncio.sleep(check_interval)
 
-    results = []
+    results: List[Any] = []
     for task_id in ordered_ids:
         result = await context.broker.result_backend.get_result(task_id)
+        logger.warning("Found error: %s", result.error)
         if result.is_err:
             if skip_errors:
+                continue
+            if none_if_errors:
+                results.append(None)
                 continue
             err_cause = None
             if isinstance(result.error, BaseException):
@@ -137,6 +145,7 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
                 sub_task_ids,
                 check_interval=self.check_interval,
                 skip_errors=self.skip_errors,
+                none_if_errors=False,
             )
         )
 

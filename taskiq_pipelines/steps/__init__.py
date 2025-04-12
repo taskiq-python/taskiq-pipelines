@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from taskiq_pipelines.abc import AbstractStep
 from taskiq_pipelines.steps.filter import FilterStep
+from taskiq_pipelines.steps.group import GroupStep
 from taskiq_pipelines.steps.mapper import MapperStep
 from taskiq_pipelines.steps.sequential import SequentialStep
 
@@ -21,6 +22,7 @@ def parse_step(step_type: str, step_data: Dict[str, Any]) -> AbstractStep:
 
 __all__ = [
     "FilterStep",
+    "GroupStep",
     "MapperStep",
     "SequentialStep",
 ]
