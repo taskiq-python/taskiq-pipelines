@@ -56,7 +56,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     def __init__(
         self: "Pipeline[[], _ReturnType]",
         broker: AsyncBroker,
-        task: Optional[Group[_ReturnType]] = None,
+        task: Optional[Group[Any, _ReturnType]] = None,
     ) -> None: ...
 
     @overload
@@ -78,7 +78,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
             Union[
                 AsyncKicker[_FuncParams, _ReturnType],
                 AsyncTaskiqDecoratedTask[_FuncParams, _ReturnType],
-                Group[_ReturnType],
+                Group[Any, _ReturnType],
             ]
         ] = None,
     ) -> None:
@@ -353,7 +353,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
 
     def group(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        group: Group[_T2],
+        group: Group[Any, _T2],
     ) -> "Pipeline[_FuncParams, _T2]":
         """
         Add group task execution step.

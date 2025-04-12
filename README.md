@@ -200,8 +200,15 @@ def to_string(val: Any) -> str:
 
 async def main():
     pipe = (
-        Pipeline(broker).group(
-            Group()
+        Pipeline(broker)
+        .group(
+            Group(
+                # Aborts pipeline
+                # if any of tasks fails
+                skip_errors=False,
+                # How often to check for completion.
+                check_interval=0.1,
+            )
             # Here we start task that adds 1 to 1
             .add(add_one, 1)
             # Here's a task that multiplies 2 by 2
