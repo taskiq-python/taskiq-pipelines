@@ -167,9 +167,56 @@ You can add filters by calling `.filter` method of the pipeline.
 ### Group steps
 
 This step groups together multiple tasks and sends them after the previous steps.
+All tasks will be executed in parallel to each other and collected to a single tuple.
 
 To create a group you need to use `Group` class from `taskiq_pipelienes` like this:
 
-```
+```python
+import asyncio
+from typing import Any
+
+from taskiq.brokers.inmemory_broker import InMemoryBroker
+
+from taskiq_pipelines import Group, Pipeline, PipelineMiddleware
+
+broker = InMemoryBroker()
+broker.add_middlewares(PipelineMiddleware())
+
+
+@broker.task
+def add_one(value: int) -> int:
+    return value + 1
+
+
+@broker.task
+def mul_two(val: int) -> int:
+    return val * 2
+
+
+@broker.task
+def to_string(val: Any) -> str:
+    return str(val)
+
+
+async def main():
+    pipe = (
+        Pipeline(broker).group(
+            Group()
+            # Here we start task that adds 1 to 1
+            .add(add_one, 1)
+            # Here's a task that multiplies 2 by 2
+            .add(mul_two, 2)
+        # Here we map all results to string
+        ).map(to_string)
+    )
+    task = await pipe.kiq()
+    result = await task.wait_result()
+    # Here it should output
+    # Calculated value: ['2', '4']
+    print("Calculated value:", result.return_value)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
 ```
