@@ -162,3 +162,14 @@ If called tasks returned `True` for some element, this element will be added in 
 
 After the execution you'll get a list with filtered results.
 You can add filters by calling `.filter` method of the pipeline.
+
+
+### Group steps
+
+This step groups together multiple tasks and sends them after the previous steps.
+
+To create a group you need to use `Group` class from `taskiq_pipelienes` like this:
+
+```
+
+```

@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pydantic
-from taskiq import AsyncBroker, Context, TaskiqDepends, TaskiqResult
+from taskiq import AsyncBroker, AsyncTaskiqTask, Context, TaskiqDepends, TaskiqResult
 from taskiq.brokers.shared_broker import async_shared_broker
 from taskiq.decor import AsyncTaskiqDecoratedTask
 from taskiq.kicker import AsyncKicker
@@ -88,9 +88,9 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
         step_number: int,
         parent_task_id: str,
         task_id: str,
-        pipe_data: str,
+        pipe_data: bytes,
         result: "TaskiqResult[Any]",
-    ) -> None:
+    ) -> AsyncTaskiqTask[Any]:
         """
         Run filter action.
 
@@ -121,7 +121,7 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
             else:
                 task = await kicker.kiq(item, **self.additional_kwargs)
             sub_task_ids.append(task.task_id)
-        await (
+        return await (
             filter_tasks.kicker()
             .with_task_id(task_id)
             .with_broker(

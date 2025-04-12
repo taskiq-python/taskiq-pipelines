@@ -6,6 +6,7 @@ import pydantic
 from taskiq import (
     AsyncBroker,
     AsyncTaskiqDecoratedTask,
+    AsyncTaskiqTask,
     Context,
     TaskiqDepends,
     TaskiqResult,
@@ -60,8 +61,8 @@ async def wait_tasks(  # noqa: C901
     results: List[Any] = []
     for task_id in ordered_ids:
         result = await context.broker.result_backend.get_result(task_id)
-        logger.warning("Found error: %s", result.error)
         if result.is_err:
+            logger.warning("Found error: %s", result.error)
             if skip_errors:
                 continue
             if none_if_errors:
@@ -92,9 +93,9 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         step_number: int,
         parent_task_id: str,
         task_id: str,
-        pipe_data: str,
+        pipe_data: bytes,
         result: "TaskiqResult[Any]",
-    ) -> None:
+    ) -> AsyncTaskiqTask[Any]:
         """
         Runs mapping.
 
@@ -132,7 +133,7 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
                 task = await kicker.kiq(item, **self.additional_kwargs)
             sub_task_ids.append(task.task_id)
 
-        await (
+        return await (
             wait_tasks.kicker()
             .with_task_id(task_id)
             .with_broker(

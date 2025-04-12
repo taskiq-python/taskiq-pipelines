@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 import pydantic
 from taskiq import (
     AsyncBroker,
+    AsyncTaskiqTask,
     Context,
     TaskiqDepends,
     TaskiqMessage,
@@ -82,9 +83,9 @@ class GroupStep(pydantic.BaseModel, AbstractStep, step_name="group"):
         step_number: int,
         parent_task_id: str,
         task_id: str,
-        pipe_data: str,
+        pipe_data: bytes,
         result: "TaskiqResult[Any]",
-    ) -> None:
+    ) -> AsyncTaskiqTask[Any]:
         """
         Execute group action.
 
@@ -100,7 +101,7 @@ class GroupStep(pydantic.BaseModel, AbstractStep, step_name="group"):
             ids.append(subtask_id)
             await broker.kick(broker.formatter.dumps(task.to_message(subtask_id)))
 
-        await (
+        return await (
             wait_group_tasks.kicker()
             .with_broker(broker)
             .with_task_id(task_id)
