@@ -13,13 +13,15 @@ from typing import (
 )
 
 import pydantic
-from taskiq import AsyncBroker, AsyncTaskiqTask
+from taskiq import AsyncBroker, AsyncTaskiqTask, TaskiqResult
 from taskiq.decor import AsyncTaskiqDecoratedTask
 from taskiq.kicker import AsyncKicker
 from typing_extensions import ParamSpec
 
 from taskiq_pipelines.constants import CURRENT_STEP, EMPTY_PARAM_NAME, PIPELINE_DATA
 from taskiq_pipelines.steps import FilterStep, MapperStep, SequentialStep, parse_step
+from taskiq_pipelines.steps.group import GroupStep
+from taskiq_pipelines.task_group import Group, GroupWithArgs
 
 _ReturnType = TypeVar("_ReturnType")
 _FuncParams = ParamSpec("_FuncParams")
@@ -50,6 +52,14 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     but it's nice to have.
     """
 
+    @overload
+    def __init__(
+        self: "Pipeline[[], Any]",
+        broker: AsyncBroker,
+        task: None = None,
+    ) -> None: ...
+
+    @overload
     def __init__(
         self,
         broker: AsyncBroker,
@@ -59,11 +69,27 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
                 AsyncTaskiqDecoratedTask[_FuncParams, _ReturnType],
             ]
         ] = None,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        broker: AsyncBroker,
+        task: Optional[
+            Union[
+                AsyncKicker[_FuncParams, _ReturnType],
+                AsyncTaskiqDecoratedTask[_FuncParams, _ReturnType],
+                Group[Any, _ReturnType],
+            ]
+        ] = None,
     ) -> None:
         self.broker = broker
         self.steps: "List[DumpedStep]" = []
-        if task:
-            self.call_next(task)
+        if not task:
+            return
+        if isinstance(task, Group):
+            self.group(task)
+            return
+        self.call_next(task)
 
     @overload
     def call_next(
@@ -325,6 +351,43 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         )
         return self
 
+    @overload
+    def group(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        group: GroupWithArgs[Any, _T2],
+    ) -> "Pipeline[_FuncParams, _T2]": ...
+
+    @overload
+    def group(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        group: Group[Any, _T2],
+    ) -> "Pipeline[_FuncParams, _T2]": ...
+
+    def group(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        group: Union[Group[Any, Any], GroupWithArgs[Any, Any]],
+    ) -> "Pipeline[_FuncParams, Any]":
+        """
+        Add group task execution step.
+
+        This step will run all tasks in parallel
+        and will wait for all of them to finish.
+
+        Results of all tasks will be returned as an iterable
+        where each item is a result of the task in the group
+        with the same order.
+
+        :param group: group to execute.
+        """
+        self.steps.append(
+            DumpedStep(
+                step_type=GroupStep._step_name,
+                step_data=group.to_step().model_dump(),
+                task_id="",
+            ),
+        )
+        return self  # type: ignore
+
     def dumpb(self) -> bytes:
         """
         Dumps current pipeline as string.
@@ -352,6 +415,48 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         pipe.steps = DumpedSteps.model_validate(data)  # type: ignore[assignment]
         return pipe
 
+    async def _kick_sequential(
+        self,
+        step: SequentialStep,
+        task_id: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> AsyncTaskiqTask[_ReturnType]:
+        kicker = (
+            AsyncKicker(
+                step.task_name,
+                broker=self.broker,
+                labels=step.labels,
+            )
+            .with_task_id(task_id)
+            .with_labels(
+                **{CURRENT_STEP: 0, PIPELINE_DATA: self.dumpb()},  # type: ignore
+            )
+        )
+        return await kicker.kiq(*args, **kwargs)
+
+    async def _kick_group(
+        self,
+        group: GroupStep,
+        task_id: str,
+    ) -> AsyncTaskiqTask[Any]:
+        await group.act(
+            broker=self.broker,
+            task_id=task_id,
+            step_number=0,
+            parent_task_id="",
+            pipe_data=self.dumpb(),
+            result=TaskiqResult(
+                is_err=False,
+                return_value=None,
+                execution_time=0.0,
+            ),
+        )
+        return AsyncTaskiqTask(
+            task_id=task_id,
+            result_backend=self.broker.result_backend,
+        )
+
     async def kiq(
         self,
         *args: _FuncParams.args,
@@ -378,20 +483,18 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         self._update_task_ids()
         step = self.steps[0]
         parsed_step = parse_step(step.step_type, step.step_data)
-        if not isinstance(parsed_step, SequentialStep):
-            raise ValueError("First step must be sequential.")
-        kicker = (
-            AsyncKicker(
-                parsed_step.task_name,
-                broker=self.broker,
-                labels=parsed_step.labels,
+        if isinstance(parsed_step, SequentialStep):
+            taskiq_task = await self._kick_sequential(
+                parsed_step,
+                step.task_id,
+                *args,
+                **kwargs,
             )
-            .with_task_id(step.task_id)
-            .with_labels(
-                **{CURRENT_STEP: 0, PIPELINE_DATA: self.dumpb()},  # type: ignore
-            )
-        )
-        taskiq_task = await kicker.kiq(*args, **kwargs)
+        elif isinstance(parsed_step, GroupStep):
+            taskiq_task = await self._kick_group(parsed_step, step.task_id)
+        else:
+            raise ValueError("First step must be sequential or a group.")
+
         taskiq_task.task_id = self.steps[-1].task_id
         return taskiq_task
 

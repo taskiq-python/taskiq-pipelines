@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Union
 
 import pydantic
-from taskiq import AsyncBroker, AsyncTaskiqDecoratedTask, TaskiqResult
+from taskiq import AsyncBroker, AsyncTaskiqDecoratedTask, AsyncTaskiqTask, TaskiqResult
 from taskiq.kicker import AsyncKicker
 
 from taskiq_pipelines.abc import AbstractStep
@@ -30,9 +30,9 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
         step_number: int,
         parent_task_id: str,
         task_id: str,
-        pipe_data: str,
+        pipe_data: bytes,
         result: "TaskiqResult[Any]",
-    ) -> None:
+    ) -> AsyncTaskiqTask[Any]:
         """
         Runs next task.
 
@@ -64,11 +64,10 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
         )
         if isinstance(self.param_name, str):
             self.additional_kwargs[self.param_name] = result.return_value
-            await kicker.kiq(**self.additional_kwargs)
-        elif self.param_name == EMPTY_PARAM_NAME:
-            await kicker.kiq(**self.additional_kwargs)
-        else:
-            await kicker.kiq(result.return_value, **self.additional_kwargs)
+            return await kicker.kiq(**self.additional_kwargs)
+        if self.param_name == EMPTY_PARAM_NAME:
+            return await kicker.kiq(**self.additional_kwargs)
+        return await kicker.kiq(result.return_value, **self.additional_kwargs)
 
     @classmethod
     def from_task(

@@ -162,3 +162,131 @@ If called tasks returned `True` for some element, this element will be added in 
 
 After the execution you'll get a list with filtered results.
 You can add filters by calling `.filter` method of the pipeline.
+
+
+### Group steps
+
+This step groups together multiple tasks and sends them after the previous steps.
+All tasks will be executed in parallel to each other and collected to a single tuple.
+
+To create a group you need to use `Group` class from `taskiq_pipelines` like this:
+
+```python
+import asyncio
+from typing import Any
+
+from taskiq.brokers.inmemory_broker import InMemoryBroker
+
+from taskiq_pipelines import Group, Pipeline, PipelineMiddleware
+
+broker = InMemoryBroker()
+broker.add_middlewares(PipelineMiddleware())
+
+
+@broker.task
+def add_one(value: int) -> int:
+    return value + 1
+
+
+@broker.task
+def mul_two(val: int) -> int:
+    return val * 2
+
+
+@broker.task
+def to_string(val: Any) -> str:
+    return str(val)
+
+
+async def main():
+    pipe = (
+        Pipeline(broker)
+        .group(
+            Group(
+                # Aborts pipeline
+                # if any of tasks fails
+                skip_errors=False,
+                # How often to check for completion.
+                check_interval=0.1,
+            )
+            # Here we start task that adds 1 to 1
+            .add(add_one, 1)
+            # Here's a task that multiplies 2 by 2
+            .add(mul_two, 2)
+        # Here we map all results to string
+        ).map(to_string)
+    )
+    task = await pipe.kiq()
+    result = await task.wait_result()
+    # Here it should output
+    # Calculated value: ['2', '4']
+    print("Calculated value:", result.return_value)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+Alternatively, you can use `GroupWithArgs` class to pass arguments of previous step
+as an argument to called functions. Here's an example:
+
+```python
+import asyncio
+from typing import Any
+
+from taskiq.brokers.inmemory_broker import InMemoryBroker
+
+from taskiq_pipelines import GroupWithArgs, Pipeline, PipelineMiddleware
+
+broker = InMemoryBroker()
+broker.add_middlewares(PipelineMiddleware())
+
+
+@broker.task
+def add_one(value: int) -> int:
+    return value + 1
+
+
+@broker.task
+def mul_two(val: int) -> int:
+    return val * 2
+
+
+@broker.task
+def to_string(val: Any) -> str:
+    return str(val)
+
+
+async def main():
+    pipe = (
+        # The pipelines starts with `add_one` task.
+        Pipeline(broker, add_one)
+        # All values are passed to the group
+        .group(
+            GroupWithArgs(
+                # Aborts pipeline
+                # if any of tasks fails
+                skip_errors=False,
+                # How often to check for completion.
+                check_interval=0.1,
+            )
+            # Here we start task that adds 1 to result
+            # of the previous task.
+            # The result is passed as keyword argument "value"
+            .add(add_one, param_name="value")
+            # Here's a task that multiplies 2
+            .add(mul_two)
+        # Here we map all results to string
+        ).map(to_string)
+    )
+    task = await pipe.kiq(1)
+    result = await task.wait_result()
+    # Here it should output
+    # Calculated value: ['3', '4']
+    print("Calculated value:", result.return_value)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```

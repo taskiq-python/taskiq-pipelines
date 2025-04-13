@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Type
 
-from taskiq import AsyncBroker, TaskiqResult
+from taskiq import AsyncBroker, AsyncTaskiqTask, TaskiqResult
 from typing_extensions import ClassVar
 
 
@@ -26,9 +26,9 @@ class AbstractStep(ABC):
         step_number: int,
         parent_task_id: str,
         task_id: str,
-        pipe_data: str,
+        pipe_data: bytes,
         result: "TaskiqResult[Any]",
-    ) -> None:
+    ) -> AsyncTaskiqTask[Any]:
         """
         Perform pipeline action.
 

@@ -31,7 +31,8 @@ repos:
         args:
           - "check"
           - "--fix"
-          - "."
+          - "taskiq_pipelines"
+          - "tests"
 
       - id: mypy
         name: Validate types with MyPy
