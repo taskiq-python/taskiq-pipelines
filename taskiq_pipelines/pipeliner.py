@@ -365,7 +365,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
 
     def group(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        group: Group[Any, Any] | GroupWithArgs[Any, Any],
+        group: Union[Group[Any, Any], GroupWithArgs[Any, Any]],
     ) -> "Pipeline[_FuncParams, Any]":
         """
         Add group task execution step.
