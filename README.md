@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
 ```
 
-Aletrnatively, you can use `GroupWithArgs` class to pass arguments of previous step
+Alternatively, you can use `GroupWithArgs` class to pass arguments of previous step
 as an argument to called functions. Here's an example:
 
 ```python
