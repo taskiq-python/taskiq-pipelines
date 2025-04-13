@@ -20,7 +20,7 @@ from taskiq_pipelines.steps.mapper import wait_tasks
 async def wait_group_tasks(
     task_ids: List[str],
     check_interval: float,
-    skip_errors: bool = True,
+    skip_errors: bool = False,
     context: Context = TaskiqDepends(),
 ) -> tuple[Any, ...]:
     """Waits for subtasks to complete."""
@@ -130,7 +130,7 @@ class GroupStep(pydantic.BaseModel, AbstractStep, step_name="group"):
             )
             .kiq(
                 task_ids=ids,
-                skip_errors=True,
+                skip_errors=self.skip_errors,
                 check_interval=self.check_interval,
             )
         )
