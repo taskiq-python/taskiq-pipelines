@@ -21,7 +21,7 @@ from typing_extensions import ParamSpec
 from taskiq_pipelines.constants import CURRENT_STEP, EMPTY_PARAM_NAME, PIPELINE_DATA
 from taskiq_pipelines.steps import FilterStep, MapperStep, SequentialStep, parse_step
 from taskiq_pipelines.steps.group import GroupStep
-from taskiq_pipelines.task_group import Group
+from taskiq_pipelines.task_group import Group, GroupWithArgs
 
 _ReturnType = TypeVar("_ReturnType")
 _FuncParams = ParamSpec("_FuncParams")
@@ -54,9 +54,9 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
 
     @overload
     def __init__(
-        self: "Pipeline[[], _ReturnType]",
+        self: "Pipeline[[], Any]",
         broker: AsyncBroker,
-        task: Optional[Group[Any, _ReturnType]] = None,
+        task: None = None,
     ) -> None: ...
 
     @overload
@@ -351,10 +351,22 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         )
         return self
 
+    @overload
+    def group(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        group: GroupWithArgs[Any, _T2],
+    ) -> "Pipeline[_FuncParams, _T2]": ...
+
+    @overload
     def group(
         self: "Pipeline[_FuncParams, _ReturnType]",
         group: Group[Any, _T2],
-    ) -> "Pipeline[_FuncParams, _T2]":
+    ) -> "Pipeline[_FuncParams, _T2]": ...
+
+    def group(
+        self: "Pipeline[_FuncParams, _ReturnType]",
+        group: Group[Any, Any] | GroupWithArgs[Any, Any],
+    ) -> "Pipeline[_FuncParams, Any]":
         """
         Add group task execution step.
 

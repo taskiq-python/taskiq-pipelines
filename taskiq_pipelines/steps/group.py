@@ -41,6 +41,7 @@ class GroupStepItem(pydantic.BaseModel):
     labels: Dict[str, Any]
     labels_types: Optional[Dict[str, int]] = None
     args: List[Any]
+    param_name: Optional[str]
     kwargs: Dict[str, Any]
 
     def from_message(self, message: TaskiqMessage) -> None:
@@ -54,19 +55,31 @@ class GroupStepItem(pydantic.BaseModel):
         self.args = message.args
         self.kwargs = message.kwargs
 
-    def to_message(self, task_id: str) -> TaskiqMessage:
+    def to_message(
+        self,
+        task_id: str,
+        result: Optional[TaskiqResult[Any]] = None,
+    ) -> TaskiqMessage:
         """
         Convert this item to message.
 
         :return: message
         """
+        args = self.args
+        kwargs = self.kwargs
+        if result:
+            if self.param_name:
+                kwargs[self.param_name] = result.return_value
+            else:
+                args = [result.return_value, *args]
+
         return TaskiqMessage(
             task_id=task_id,
             task_name=self.task_name,
             labels=self.labels,
             labels_types=self.labels_types,
-            args=self.args,
-            kwargs=self.kwargs,
+            args=args,
+            kwargs=kwargs,
         )
 
 
@@ -76,6 +89,7 @@ class GroupStep(pydantic.BaseModel, AbstractStep, step_name="group"):
     tasks: list[GroupStepItem]
     skip_errors: bool
     check_interval: float
+    pass_args: bool = False
 
     async def act(
         self,
@@ -99,7 +113,13 @@ class GroupStep(pydantic.BaseModel, AbstractStep, step_name="group"):
         for task in self.tasks:
             subtask_id = broker.id_generator()
             ids.append(subtask_id)
-            await broker.kick(broker.formatter.dumps(task.to_message(subtask_id)))
+
+            if self.pass_args:
+                message = task.to_message(subtask_id, result)
+            else:
+                message = task.to_message(subtask_id, None)
+
+            await broker.kick(broker.formatter.dumps(message))
 
         return await (
             wait_group_tasks.kicker()
