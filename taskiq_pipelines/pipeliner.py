@@ -1,14 +1,10 @@
+from collections.abc import Coroutine
 from types import CoroutineType
 from typing import (
     Any,
-    Coroutine,
-    Dict,
     Generic,
-    List,
     Literal,
-    Optional,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -30,11 +26,11 @@ class DumpedStep(pydantic.BaseModel):
     """Dumped state model."""
 
     step_type: str
-    step_data: Dict[str, Any]
+    step_data: dict[str, Any]
     task_id: str
 
 
-DumpedSteps = pydantic.RootModel[List[DumpedStep]]
+DumpedSteps = pydantic.RootModel[list[DumpedStep]]
 
 
 class Pipeline(Generic[_FuncParams, _ReturnType]):
@@ -53,49 +49,42 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     def __init__(
         self,
         broker: AsyncBroker,
-        task: Optional[
-            Union[
-                AsyncKicker[_FuncParams, _ReturnType],
-                AsyncTaskiqDecoratedTask[_FuncParams, _ReturnType],
-            ]
-        ] = None,
+        task: (
+            AsyncKicker[_FuncParams, _ReturnType]
+            | AsyncTaskiqDecoratedTask[_FuncParams, _ReturnType]
+            | None
+        ) = None,
     ) -> None:
         self.broker = broker
-        self.steps: "List[DumpedStep]" = []
+        self.steps: list[DumpedStep] = []
         if task:
             self.call_next(task)
 
     @overload
     def call_next(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, Coroutine[Any, Any, _T2]],
-            AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"],
-            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
-            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"],
-        ],
-        param_name: Union[Optional[str], Literal[-1]] = None,
+        task: (
+            AsyncKicker[Any, Coroutine[Any, Any, _T2]]
+            | AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"]
+            | AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]]
+            | AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"]
+        ),
+        param_name: str | None | Literal[-1] = None,
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]": ...
 
     @overload
     def call_next(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, _T2],
-            AsyncTaskiqDecoratedTask[Any, _T2],
-        ],
-        param_name: Union[Optional[str], Literal[-1]] = None,
+        task: AsyncKicker[Any, _T2] | AsyncTaskiqDecoratedTask[Any, _T2],
+        param_name: str | None | Literal[-1] = None,
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]": ...
 
     def call_next(
         self,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
-        param_name: Union[Optional[str], Literal[-1]] = None,
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
+        param_name: str | None | Literal[-1] = None,
         **additional_kwargs: Any,
     ) -> Any:
         """
@@ -129,31 +118,25 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     @overload
     def call_after(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, Coroutine[Any, Any, _T2]],
-            AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"],
-            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
-            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"],
-        ],
+        task: (
+            AsyncKicker[Any, Coroutine[Any, Any, _T2]]
+            | AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"]
+            | AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]]
+            | AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"]
+        ),
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]": ...
 
     @overload
     def call_after(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, _T2],
-            AsyncTaskiqDecoratedTask[Any, _T2],
-        ],
+        task: AsyncKicker[Any, _T2] | AsyncTaskiqDecoratedTask[Any, _T2],
         **additional_kwargs: Any,
     ) -> "Pipeline[_FuncParams, _T2]": ...
 
     def call_after(
         self,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
         **additional_kwargs: Any,
     ) -> Any:
         """
@@ -185,38 +168,32 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     @overload
     def map(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, Coroutine[Any, Any, _T2]],
-            AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"],
-            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]],
-            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"],
-        ],
-        param_name: Optional[str] = None,
+        task: (
+            AsyncKicker[Any, Coroutine[Any, Any, _T2]]
+            | AsyncKicker[Any, "CoroutineType[Any, Any, _T2]"]
+            | AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, _T2]]
+            | AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, _T2]"]
+        ),
+        param_name: str | None = None,
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, List[_T2]]": ...
+    ) -> "Pipeline[_FuncParams, list[_T2]]": ...
 
     @overload
     def map(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, _T2],
-            AsyncTaskiqDecoratedTask[Any, _T2],
-        ],
-        param_name: Optional[str] = None,
+        task: AsyncKicker[Any, _T2] | AsyncTaskiqDecoratedTask[Any, _T2],
+        param_name: str | None = None,
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
-    ) -> "Pipeline[_FuncParams, List[_T2]]": ...
+    ) -> "Pipeline[_FuncParams, list[_T2]]": ...
 
     def map(
         self,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
-        param_name: Optional[str] = None,
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
+        param_name: str | None = None,
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
@@ -256,13 +233,13 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     @overload
     def filter(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, Coroutine[Any, Any, bool]],
-            AsyncKicker[Any, "CoroutineType[Any, Any, bool]"],
-            AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, bool]],
-            AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, bool]"],
-        ],
-        param_name: Optional[str] = None,
+        task: (
+            AsyncKicker[Any, Coroutine[Any, Any, bool]]
+            | AsyncKicker[Any, "CoroutineType[Any, Any, bool]"]
+            | AsyncTaskiqDecoratedTask[Any, Coroutine[Any, Any, bool]]
+            | AsyncTaskiqDecoratedTask[Any, "CoroutineType[Any, Any, bool]"]
+        ),
+        param_name: str | None = None,
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
@@ -271,11 +248,8 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
     @overload
     def filter(
         self: "Pipeline[_FuncParams, _ReturnType]",
-        task: Union[
-            AsyncKicker[Any, bool],
-            AsyncTaskiqDecoratedTask[Any, bool],
-        ],
-        param_name: Optional[str] = None,
+        task: AsyncKicker[Any, bool] | AsyncTaskiqDecoratedTask[Any, bool],
+        param_name: str | None = None,
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
@@ -283,11 +257,8 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
 
     def filter(
         self,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
-        param_name: Optional[str] = None,
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
+        param_name: str | None = None,
         skip_errors: bool = False,
         check_interval: float = 0.5,
         **additional_kwargs: Any,
@@ -347,7 +318,7 @@ class Pipeline(Generic[_FuncParams, _ReturnType]):
         :param pipe_data: serialized pipeline data.
         :return: new
         """
-        pipe: "Pipeline[Any, Any]" = Pipeline(broker)
+        pipe: Pipeline[Any, Any] = Pipeline(broker)
         data = broker.serializer.loadb(pipe_data)
         pipe.steps = DumpedSteps.model_validate(data)  # type: ignore[assignment]
         return pipe

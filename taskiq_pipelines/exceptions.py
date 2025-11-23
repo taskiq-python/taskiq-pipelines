@@ -1,4 +1,4 @@
-from typing import ClassVar, Union
+from typing import ClassVar
 
 from taskiq import TaskiqError
 
@@ -16,7 +16,7 @@ class StepError(PipelineError):
     _STEP_NAME: ClassVar[str]
 
     task_id: str
-    error: Union[BaseException, None]
+    error: BaseException | None
 
 
 class MappingError(StepError):

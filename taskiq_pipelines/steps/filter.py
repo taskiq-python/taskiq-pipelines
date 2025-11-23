@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, Dict, Iterable, List, Optional, Union
+from collections.abc import Iterable
+from typing import Any
 
 import pydantic
 from taskiq import AsyncBroker, Context, TaskiqDepends, TaskiqResult
@@ -14,12 +15,12 @@ from taskiq_pipelines.exceptions import AbortPipeline, FilterError
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.filter_tasks")
 async def filter_tasks(  # noqa: C901
-    task_ids: List[str],
+    task_ids: list[str],
     parent_task_id: str,
     check_interval: float,
     skip_errors: bool = False,
     context: Context = TaskiqDepends(),
-) -> List[Any]:
+) -> list[Any]:
     """
     Filter resulted tasks.
 
@@ -56,7 +57,8 @@ async def filter_tasks(  # noqa: C901
     filtered_results = []
     for task_id, value in zip(
         ordered_ids,
-        results.return_value,  # type: ignore
+        results.return_value,
+        strict=False,  # type: ignore
     ):
         result = await context.broker.result_backend.get_result(task_id)
         if result.is_err:
@@ -76,9 +78,9 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
     """Task to filter results."""
 
     task_name: str
-    labels: Dict[str, str]
-    param_name: Optional[str]
-    additional_kwargs: Dict[str, Any]
+    labels: dict[str, str]
+    param_name: str | None
+    additional_kwargs: dict[str, Any]
     skip_errors: bool
     check_interval: float
 
@@ -110,7 +112,7 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
             raise AbortPipeline(reason="Result of the previous task is not iterable.")
         sub_task_ids = []
         for item in result.return_value:
-            kicker: "AsyncKicker[Any, Any]" = AsyncKicker(
+            kicker: AsyncKicker[Any, Any] = AsyncKicker(
                 task_name=self.task_name,
                 broker=broker,
                 labels=self.labels,
@@ -141,11 +143,8 @@ class FilterStep(pydantic.BaseModel, AbstractStep, step_name="filter"):
     @classmethod
     def from_task(
         cls,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
-        param_name: Optional[str],
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
+        param_name: str | None,
         skip_errors: bool,
         check_interval: float,
         **additional_kwargs: Any,

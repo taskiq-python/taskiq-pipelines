@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import pydantic
 from taskiq import AsyncBroker, AsyncTaskiqDecoratedTask, TaskiqResult
@@ -18,11 +18,11 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
     """
 
     task_name: str
-    labels: Dict[str, str]
+    labels: dict[str, str]
     # order is important here, otherwise pydantic will always choose str.
     # we use int instead of Literal[-1] because pydantic thinks that -1 is always str.
-    param_name: Union[Optional[int], str]
-    additional_kwargs: Dict[str, Any]
+    param_name: int | None | str
+    additional_kwargs: dict[str, Any]
 
     async def act(
         self,
@@ -51,7 +51,7 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
         :param pipe_data: serialized pipeline.
         :param result: result of the previous task.
         """
-        kicker: "AsyncKicker[Any, Any]" = (
+        kicker: AsyncKicker[Any, Any] = (
             AsyncKicker(
                 task_name=self.task_name,
                 broker=broker,
@@ -73,11 +73,8 @@ class SequentialStep(pydantic.BaseModel, AbstractStep, step_name="sequential"):
     @classmethod
     def from_task(
         cls,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
-        param_name: Union[Optional[str], int],
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
+        param_name: str | None | int,
         **additional_kwargs: Any,
     ) -> "SequentialStep":
         """

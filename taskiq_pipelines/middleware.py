@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, List, Optional
+from typing import Any
 
 import pydantic
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
@@ -43,7 +43,7 @@ class PipelineMiddleware(TaskiqMiddleware):
         pipeline_data = message.labels[PIPELINE_DATA]
         parsed_data = self.broker.serializer.loadb(pipeline_data)
         try:
-            steps_data = pydantic.TypeAdapter(List[DumpedStep]).validate_python(
+            steps_data = pydantic.TypeAdapter(list[DumpedStep]).validate_python(
                 parsed_data,
             )
         except ValueError as err:
@@ -103,7 +103,7 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         pipe_data = message.labels[PIPELINE_DATA]
         try:
-            steps = pydantic.TypeAdapter(List[DumpedStep]).validate_json(pipe_data)
+            steps = pydantic.TypeAdapter(list[DumpedStep]).validate_json(pipe_data)
         except ValueError:
             return
         if current_step_num == len(steps) - 1:
@@ -113,7 +113,7 @@ class PipelineMiddleware(TaskiqMiddleware):
     async def fail_pipeline(
         self,
         last_task_id: str,
-        abort: Optional[BaseException] = None,
+        abort: BaseException | None = None,
     ) -> None:
         """
         This function aborts pipeline.

@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, Dict, Iterable, List, Optional, Union
+from collections.abc import Iterable
+from typing import Any
 
 import pydantic
 from taskiq import (
@@ -19,11 +20,11 @@ from taskiq_pipelines.exceptions import AbortPipeline, MappingError
 
 @async_shared_broker.task(task_name="taskiq_pipelines.shared.wait_tasks")
 async def wait_tasks(
-    task_ids: List[str],
+    task_ids: list[str],
     check_interval: float,
     skip_errors: bool = True,
     context: Context = TaskiqDepends(),
-) -> List[Any]:
+) -> list[Any]:
     """
     Waits for subtasks to complete.
 
@@ -72,9 +73,9 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
     """Step that maps iterables."""
 
     task_name: str
-    labels: Dict[str, str]
-    param_name: Optional[str]
-    additional_kwargs: Dict[str, Any]
+    labels: dict[str, str]
+    param_name: str | None
+    additional_kwargs: dict[str, Any]
     skip_errors: bool
     check_interval: float
 
@@ -106,13 +107,13 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
         :raises AbortPipeline: if the result of the
             previous task is not iterable.
         """
-        sub_task_ids: List[str] = []
+        sub_task_ids: list[str] = []
         return_value = result.return_value
         if not isinstance(return_value, Iterable):
             raise AbortPipeline(reason="Result of the previous task is not iterable.")
 
         for item in return_value:
-            kicker: "AsyncKicker[Any, Any]" = AsyncKicker(
+            kicker: AsyncKicker[Any, Any] = AsyncKicker(
                 task_name=self.task_name,
                 broker=broker,
                 labels=self.labels,
@@ -143,11 +144,8 @@ class MapperStep(pydantic.BaseModel, AbstractStep, step_name="mapper"):
     @classmethod
     def from_task(
         cls,
-        task: Union[
-            AsyncKicker[Any, Any],
-            AsyncTaskiqDecoratedTask[Any, Any],
-        ],
-        param_name: Optional[str],
+        task: AsyncKicker[Any, Any] | AsyncTaskiqDecoratedTask[Any, Any],
+        param_name: str | None,
         skip_errors: bool,
         check_interval: float,
         **additional_kwargs: Any,

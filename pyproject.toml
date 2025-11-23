@@ -1,12 +1,18 @@
-[tool.poetry]
+[project]
 name = "taskiq-pipelines"
-# The version is set automatically by the CI/CD pipeline
 version = "0.0.0"
 description = "Taskiq pipelines for task chaining."
-authors = ["Pavel Kirilin <win10@list.ru>"]
+authors = [{ name = "Pavel Kirilin", email = "win10@list.ru" }]
+requires-python = ">=3.10,<4"
 readme = "README.md"
-repository = "https://github.com/taskiq-python/taskiq-pipelines"
-license = "LICENSE"
+license = "MIT"
+keywords = [
+    "taskiq",
+    "pipelines",
+    "tasks",
+    "distributed",
+    "async",
+]
 classifiers = [
     "Typing :: Typed",
     "Programming Language :: Python",
@@ -22,26 +28,34 @@ classifiers = [
     "Topic :: System :: Networking",
     "Development Status :: 3 - Alpha",
 ]
-homepage = "https://github.com/taskiq-python/taskiq-pipelines"
-keywords = ["taskiq", "pipelines", "tasks", "distributed", "async"]
+dependencies = [
+    "taskiq>=0.11.12, <1",
+    "typing-extensions>=4.3.0,<5",
+    "pydantic>=2,<3",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-taskiq = ">=0.11.12, <1"
-typing-extensions = "^4.3.0"
-pydantic = "^2"
+[project.urls]
+Homepage = "https://github.com/taskiq-python/taskiq-pipelines"
+Repository = "https://github.com/taskiq-python/taskiq-pipelines"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8"
-black = { version = "^25", allow-prereleases = true }
-pytest-cov = "^6"
-anyio = "^4"
-pre-commit = "^4"
-mypy = "^1"
-pytest-xdist = { version = "^3", extras = ["psutil"] }
-ruff = "^0.9.9"
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+    "black>=25,<26",
+    "pytest-cov>=6,<7",
+    "anyio>=4,<5",
+    "pre-commit>=4,<5",
+    "mypy>=1,<2",
+    "pytest-xdist[psutil]>=3,<4",
+    "ruff>=0.9.9,<0.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.mypy]
+python_version = "3.10"
 strict = true
 ignore_missing_imports = true
 allow_subclassing_any = true
@@ -57,11 +71,8 @@ warn_unused_ignores = false
 profile = "black"
 multi_line_output = 3
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.ruff]
+target-version = "py310"
 # List of enabled rulsets.
 # See https://docs.astral.sh/ruff/rules/ for more information.
 lint.select = [
@@ -90,6 +101,8 @@ lint.select = [
     "ERA", # Checks for commented out code
     "PL",  # PyLint checks
     "RUF", # Specific to Ruff checks
+    "FA102", # Future annotations
+	"UP",    # Pyupgrade
 ]
 lint.ignore = [
     "D105",    # Missing docstring in magic method

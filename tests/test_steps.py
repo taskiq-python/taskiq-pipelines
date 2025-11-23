@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 from taskiq import InMemoryBroker
 
@@ -31,7 +29,7 @@ async def test_mapping_success() -> None:
     broker = InMemoryBroker().with_middlewares(PipelineMiddleware())
 
     @broker.task
-    def ranger(i: int) -> List[int]:
+    def ranger(i: int) -> list[int]:
         return list(range(i))
 
     @broker.task
