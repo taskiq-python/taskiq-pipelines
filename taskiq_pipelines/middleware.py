@@ -38,7 +38,7 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         current_step_num = int(message.labels[CURRENT_STEP])
         if PIPELINE_DATA not in message.labels:
-            logger.warning("Pipline data not found. Execution flow is broken.")
+            logger.warning("Pipeline data not found. Execution flow is broken.")
             return
         pipeline_data = message.labels[PIPELINE_DATA]
         parsed_data = self.broker.serializer.loadb(pipeline_data)
@@ -47,7 +47,7 @@ class PipelineMiddleware(TaskiqMiddleware):
                 parsed_data,
             )
         except ValueError as err:
-            logger.warning("Cannot parse pipline_data: %s", err, exc_info=True)
+            logger.warning("Cannot parse pipeline_data: %s", err, exc_info=True)
             return
         if current_step_num + 1 >= len(steps_data):
             logger.debug("Pipeline is completed.")
@@ -99,7 +99,7 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         current_step_num = int(message.labels[CURRENT_STEP])
         if PIPELINE_DATA not in message.labels:
-            logger.warning("Pipline data not found. Execution flow is broken.")
+            logger.warning("Pipeline data not found. Execution flow is broken.")
             return
         pipe_data = message.labels[PIPELINE_DATA]
         try:
