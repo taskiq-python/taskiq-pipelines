@@ -1,12 +1,13 @@
-[tool.poetry]
+[project]
 name = "taskiq-pipelines"
-# The version is set automatically by the CI/CD pipeline
-version = "0.0.0"
 description = "Taskiq pipelines for task chaining."
-authors = ["Pavel Kirilin <win10@list.ru>"]
+authors = [{ name = "Pavel Kirilin", email = "win10@list.ru" }]
 readme = "README.md"
-repository = "https://github.com/taskiq-python/taskiq-pipelines"
 license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["taskiq", "pipelines", "tasks", "distributed", "async"]
+requires-python = ">=3.9,<4"
+dynamic = ["version"]
 classifiers = [
     "Typing :: Typed",
     "Programming Language :: Python",
@@ -17,19 +18,25 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Intended Audience :: Developers",
     "Topic :: System :: Networking",
     "Development Status :: 3 - Alpha",
 ]
-homepage = "https://github.com/taskiq-python/taskiq-pipelines"
-keywords = ["taskiq", "pipelines", "tasks", "distributed", "async"]
+dependencies = [
+    "taskiq>=0.11.12,<1",
+    "typing-extensions>=4.3.0",
+    "pydantic>=2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-taskiq = ">=0.11.12, <1"
-typing-extensions = "^4.3.0"
-pydantic = "^2"
+[project.urls]
+Homepage = "https://github.com/taskiq-python/taskiq-pipelines"
+Repository = "https://github.com/taskiq-python/taskiq-pipelines"
+
+[tool.poetry]
+# The version is set automatically by the CI/CD pipeline
+version = "0.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8"
