@@ -7,7 +7,6 @@ authors = ["Pavel Kirilin <win10@list.ru>"]
 readme = "README.md"
 repository = "https://github.com/taskiq-python/taskiq-pipelines"
 license = "MIT"
-license-files = ["LICENSE"]
 classifiers = [
     "Typing :: Typed",
     "Programming Language :: Python",
