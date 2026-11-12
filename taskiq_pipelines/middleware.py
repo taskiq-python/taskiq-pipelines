@@ -21,7 +21,7 @@ class PipelineMiddleware(TaskiqMiddleware):
         result: "TaskiqResult[Any]",
     ) -> None:
         """
-        Handle post-execute event.
+        Handle saved task results.
 
         This is the heart of pipelines.
         Here we decide what to do next.
@@ -29,11 +29,12 @@ class PipelineMiddleware(TaskiqMiddleware):
         If the message have pipeline
         labels we can calculate our next step.
 
+        Only saved errors terminate the pipeline. Attempts suppressed by retry
+        middleware do not reach this hook.
+
         :param message: current message.
         :param result: result of the execution.
         """
-        if result.is_err:
-            return
         if CURRENT_STEP not in message.labels:
             return
         current_step_num = int(message.labels[CURRENT_STEP])
@@ -51,6 +52,9 @@ class PipelineMiddleware(TaskiqMiddleware):
             return
         if current_step_num + 1 >= len(steps_data):
             logger.debug("Pipeline is completed.")
+            return
+        if result.is_err:
+            await self.fail_pipeline(steps_data[-1].task_id, result.error)
             return
         next_step_data = steps_data[current_step_num + 1]
         try:
@@ -81,34 +85,6 @@ class PipelineMiddleware(TaskiqMiddleware):
             if current_step_num == len(steps_data) - 1:
                 return
             await self.fail_pipeline(steps_data[-1].task_id)
-
-    async def on_error(
-        self,
-        message: "TaskiqMessage",
-        result: "TaskiqResult[Any]",
-        exception: BaseException,
-    ) -> None:
-        """
-        Handles on_error event.
-
-        :param message: current message.
-        :param result: execution result.
-        :param exception: found exception.
-        """
-        if CURRENT_STEP not in message.labels:
-            return
-        current_step_num = int(message.labels[CURRENT_STEP])
-        if PIPELINE_DATA not in message.labels:
-            logger.warning("Pipeline data not found. Execution flow is broken.")
-            return
-        pipe_data = message.labels[PIPELINE_DATA]
-        try:
-            steps = pydantic.TypeAdapter(list[DumpedStep]).validate_json(pipe_data)
-        except ValueError:
-            return
-        if current_step_num == len(steps) - 1:
-            return
-        await self.fail_pipeline(steps[-1].task_id, result.error)
 
     async def fail_pipeline(
         self,
